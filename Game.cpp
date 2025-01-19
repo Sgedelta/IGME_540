@@ -5,6 +5,11 @@
 #include "PathHelpers.h"
 #include "Window.h"
 
+//include ImGui files
+#include "ImGui/imgui.h"
+#include "ImGui/imgui_impl_dx11.h"
+#include "ImGui/imgui_impl_win32.h"
+
 #include <DirectXMath.h>
 
 // Needed for a helper function to load pre-compiled shader files
@@ -47,6 +52,22 @@ void Game::Initialize()
 		Graphics::Context->VSSetShader(vertexShader.Get(), 0, 0);
 		Graphics::Context->PSSetShader(pixelShader.Get(), 0, 0);
 	}
+
+	//Initialize ImGui and Platform/Renderer Backends
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGui_ImplWin32_Init(Window::Handle());
+	ImGui_ImplDX11_Init(Graphics::Device.Get(), Graphics::Context.Get());
+
+	//ImGui dark mode:
+	ImGui::StyleColorsDark();
+
+
+	//ImGui data:
+	bgColor[0] = 0.4f;
+	bgColor[1] = 0.6f;
+	bgColor[2] = 0.75f;
+	bgColor[3] = 0.0f;
 }
 
 
@@ -58,7 +79,10 @@ void Game::Initialize()
 // --------------------------------------------------------
 Game::~Game()
 {
-
+	//ImGui Cleanup
+	ImGui_ImplDX11_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
 }
 
 
@@ -240,6 +264,13 @@ void Game::OnResize()
 // --------------------------------------------------------
 void Game::Update(float deltaTime, float totalTime)
 {
+	//Update ImGui information. This MUST run first.
+	UpdateImGui(deltaTime);
+
+	//Build the Debug UI
+	BuildUI();
+
+
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::KeyDown(VK_ESCAPE))
 		Window::Quit();
@@ -256,8 +287,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	// - At the beginning of Game::Draw() before drawing *anything*
 	{
 		// Clear the back buffer (erase what's on screen) and depth buffer
-		const float color[4] = { 0.4f, 0.6f, 0.75f, 0.0f };
-		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	color);
+		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	bgColor);
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
 
@@ -287,6 +317,10 @@ void Game::Draw(float deltaTime, float totalTime)
 			0);    // Offset to add to each index when looking up vertices
 	}
 
+	//Last thing to draw: ImGui!
+	ImGui::Render();
+	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
 	// Frame END
 	// - These should happen exactly ONCE PER FRAME
 	// - At the very end of the frame (after drawing *everything*)
@@ -305,5 +339,86 @@ void Game::Draw(float deltaTime, float totalTime)
 	}
 }
 
+
+//ImGui Helper Function
+void Game::UpdateImGui(float deltaTime) {
+	// Feed Fresh Data to ImGui
+	ImGuiIO& io = ImGui::GetIO();
+	io.DeltaTime = deltaTime;
+	io.DisplaySize.x = (float)Window::Width();
+	io.DisplaySize.y = (float)Window::Height();
+
+	// Reset frame
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+
+	// Determine new input capture
+	Input::SetKeyboardCapture(io.WantCaptureKeyboard);
+	Input::SetMouseCapture(io.WantCaptureMouse);
+
+	// show demo window
+	//ImGui::ShowDemoWindow();
+}
+
+//Helper Function that builds our ImGui UI
+void Game::BuildUI() {
+	//start a new window
+	ImGui::Begin("A Cool New Window");
+
+	ImGui::Text("Current Framerate: %d", ImGui::GetIO().Framerate);
+	ImGui::Text("Current Window Dimensions: %d, %d", Window::Width(), Window::Height());
+
+	ImGui::ColorEdit4("Background Color", bgColor);
+
+	if (ImGui::Button("Toggle ImGui Demo Window")) {
+		ImGui_Demo_Show = !ImGui_Demo_Show;
+	}
+
+	if (ImGui_Demo_Show) {
+		ImGui::ShowDemoWindow();
+	}
+
+	if (ImGui::CollapsingHeader("Collapsable Header")) {
+
+		static int highlightedIndex = -1;
+		const char* items[] = {"One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten!!!!"};
+		if (ImGui::BeginListBox("Cool Listbox!")) {
+			for (int i = 0; i < 10; ++i) {
+				const bool isSelected = (highlightedIndex == i);
+				if (ImGui::Selectable(items[i], isSelected)) {
+					highlightedIndex = i;
+				}
+				
+				if (isSelected) {
+					ImGui::SetItemDefaultFocus();
+				}
+			}
+
+			ImGui::EndListBox();
+		}
+	}
+
+	static float vals[90] = {};
+	static int valOffset = 0;
+	static double refreshTime = 0.0;
+	if (refreshTime == 0)
+		refreshTime = ImGui::GetTime();
+
+	while (refreshTime < ImGui::GetTime()) 
+	{
+		static float phase = 0.0f;
+		vals[valOffset] = sin(phase * refreshTime);
+		valOffset = (valOffset + 1) % 90;
+		phase += .1f * valOffset;
+		refreshTime += 1.0f / 60.0f;
+	}
+
+	ImGui::PlotLines("A Really Cool Plot!!!!!", vals, 90, valOffset);
+
+
+
+	ImGui::End(); //end A Cool New Window
+}
 
 
