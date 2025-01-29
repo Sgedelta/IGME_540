@@ -3,11 +3,13 @@
 #include <d3d11.h>
 #include <wrl/client.h>
 
+#include "Vertex.h"
+
 class Mesh
 {
 public:
 
-	Mesh() = default;
+	Mesh(Vertex vertexList[], int vertexCount, int indexList[], int indexCount);
 	~Mesh();
 	Mesh(const Mesh&) = delete; // Remove copy constructor
 	Mesh& operator=(const Mesh&) = delete; // Remove copy-assignment operator

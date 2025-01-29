@@ -2,6 +2,9 @@
 
 #include <d3d11.h>
 #include <wrl/client.h>
+#include <vector>
+#include <memory>
+#include "Mesh.h"
 
 class Game
 {
@@ -19,6 +22,9 @@ public:
 	void OnResize();
 
 private:
+
+
+	std::vector<std::shared_ptr<Mesh>> meshPtrs;
 
 	// Initialization helper methods - feel free to customize, combine, remove, etc.
 	void LoadShaders();
