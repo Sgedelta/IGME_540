@@ -29,6 +29,8 @@ private:
 	// Initialization helper methods - feel free to customize, combine, remove, etc.
 	void LoadShaders();
 	void CreateGeometry();
+	void CreateBuffers();
+	void SendGPUData();
 	void UpdateImGui(float deltaTime);
 	void BuildUI();
 
@@ -46,9 +48,14 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
 
+	// shader constant buffers:
+	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexConstBuffer;
+
 
 	//ImGui data
-	float bgColor[4];
+	float ImGui_bgColor[4];
+	float ImGui_colorTint[4];
+	float ImGui_offset[3];
 	bool ImGui_Demo_Show = false;
 };
 

@@ -93,5 +93,17 @@ int Mesh::GetVertextCount() {
 }
 
 void Mesh::Draw() {
+	//set buffers
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+	Graphics::Context->IASetVertexBuffers(0, 1, GetVertexBuffer().GetAddressOf(), &stride, &offset);
+	Graphics::Context->IASetIndexBuffer(GetIndexBuffer().Get(), DXGI_FORMAT_R32_UINT, 0);
+
+
+	//draw things
+	Graphics::Context->DrawIndexed(
+		GetIndexCount(),     // The number of indices to use (we could draw a subset if we wanted)
+		0,     // Offset to the first index we want to use
+		0);    // Offset to add to each index when looking up vertices
 
 }

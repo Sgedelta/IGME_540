@@ -5,6 +5,7 @@
 #include "PathHelpers.h"
 #include "Window.h"
 #include "Mesh.h"
+#include "BufferStructs.h"
 #include <memory>
 #include <iostream>
 #include <format>
@@ -34,6 +35,7 @@ void Game::Initialize()
 	//  - You'll be expanding and/or replacing these later
 	LoadShaders();
 	CreateGeometry();
+	CreateBuffers();
 
 	// Set initial graphics API state
 	//  - These settings persist until we change them
@@ -67,11 +69,20 @@ void Game::Initialize()
 	ImGui::StyleColorsDark();
 
 
-	//ImGui data:
-	bgColor[0] = 0.4f;
-	bgColor[1] = 0.6f;
-	bgColor[2] = 0.75f;
-	bgColor[3] = 0.0f;
+	//ImGui inital data:
+	ImGui_bgColor[0] = 0.4f;
+	ImGui_bgColor[1] = 0.6f;
+	ImGui_bgColor[2] = 0.75f;
+	ImGui_bgColor[3] = 0.0f;
+
+	ImGui_offset[0] = 0.0f;
+	ImGui_offset[1] = 0.0f;
+	ImGui_offset[2] = 0.0f;
+
+	ImGui_colorTint[0] = 1.0f;
+	ImGui_colorTint[1] = 1.0f;
+	ImGui_colorTint[2] = 1.0f;
+	ImGui_colorTint[3] = 1.0f;
 }
 
 
@@ -158,6 +169,20 @@ void Game::LoadShaders()
 			vertexShaderBlob->GetBufferSize(),		// Size of the shader code that uses this layout
 			inputLayout.GetAddressOf());			// Address of the resulting ID3D11InputLayout pointer
 	}
+}
+
+//a helper method that initializes many buffers for us, such as const buffers for shaders
+void Game::CreateBuffers() {
+
+	//Vertex Constant Buffer:
+	D3D11_BUFFER_DESC vertexBufferDesc = {};
+	vertexBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	vertexBufferDesc.ByteWidth = (1 * (sizeof(VertexShaderData) + 15)) / 16 * 16; //integer division trick to normalize to a value of 16
+	vertexBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	vertexBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+
+	//create:
+	Graphics::Device->CreateBuffer(&vertexBufferDesc, 0, vertexConstBuffer.GetAddressOf());
 }
 
 
@@ -282,9 +307,12 @@ void Game::Draw(float deltaTime, float totalTime)
 	// - At the beginning of Game::Draw() before drawing *anything*
 	{
 		// Clear the back buffer (erase what's on screen) and depth buffer
-		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	bgColor);
+		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	ImGui_bgColor);
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 	}
+
+	//send data to GPU
+	SendGPUData();
 
 	// DRAW geometry
 	// - These steps are generally repeated for EACH object you draw
@@ -316,19 +344,7 @@ void Game::Draw(float deltaTime, float totalTime)
 
 	//draw meshes in the ptr list
 	for (int i = 0; i < meshPtrs.size(); ++i) {
-		//set buffers
-		UINT stride = sizeof(Vertex);
-		UINT offset = 0;
-		Graphics::Context->IASetVertexBuffers(0, 1, meshPtrs[i].get()->GetVertexBuffer().GetAddressOf(), &stride, &offset);
-		Graphics::Context->IASetIndexBuffer(meshPtrs[i].get()->GetIndexBuffer().Get(), DXGI_FORMAT_R32_UINT, 0);
-
-
-		//draw things
-		Graphics::Context->DrawIndexed(
-			meshPtrs[i].get()->GetIndexCount(),     // The number of indices to use (we could draw a subset if we wanted)
-			0,     // Offset to the first index we want to use
-			0);    // Offset to add to each index when looking up vertices
-
+		meshPtrs[i].get()->Draw();
 	}
 
 	//Last thing to draw: ImGui!
@@ -353,6 +369,25 @@ void Game::Draw(float deltaTime, float totalTime)
 	}
 }
 
+
+void Game::SendGPUData() 
+{
+	
+	//Vertex Shader Data:
+	VertexShaderData vsData;
+	vsData.tint = XMFLOAT4(ImGui_colorTint[0], ImGui_colorTint[1], ImGui_colorTint[2], ImGui_colorTint[3]);
+	vsData.offset = XMFLOAT3(ImGui_offset[0], ImGui_offset[1], ImGui_offset[2]);
+
+	D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
+	Graphics::Context->Map(vertexConstBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer); //overwrite and "freeze" GPU
+
+	memcpy(mappedBuffer.pData, &vsData, sizeof(vsData)); // populate actual data
+
+	Graphics::Context->Unmap(vertexConstBuffer.Get(), 0); // "unfreeze" GPU, allowing it read access again
+
+	//bind to vertex Shader
+	Graphics::Context->VSSetConstantBuffers(0, 1, vertexConstBuffer.GetAddressOf());
+}
 
 //ImGui Helper Function
 void Game::UpdateImGui(float deltaTime) {
@@ -383,7 +418,7 @@ void Game::BuildUI() {
 	ImGui::Text("Current Framerate: %d", ImGui::GetIO().Framerate);
 	ImGui::Text("Current Window Dimensions: %d, %d", Window::Width(), Window::Height());
 
-	ImGui::ColorEdit4("Background Color", bgColor);
+	ImGui::ColorEdit4("Background Color", ImGui_bgColor);
 
 	if (ImGui::Button("Toggle ImGui Demo Window")) {
 		ImGui_Demo_Show = !ImGui_Demo_Show;
@@ -448,6 +483,13 @@ void Game::BuildUI() {
 	}
 
 	ImGui::End(); //end Mesh Information
+
+	ImGui::Begin("Tint and Offset"); 
+
+	ImGui::DragFloat3("X, Y, Z offset", &ImGui_offset[0], 0.01f, -1.0f, 1.0f);
+	ImGui::DragFloat4("color tint", &ImGui_colorTint[0], 0.01f, 0.0f, 1.0f);
+
+	ImGui::End();
 }
 
 
