@@ -106,8 +106,8 @@ void Transform::RecalculateWorldAndTranspose()
 	XMStoreFloat4x4(&worldMatrix, world);
 	XMStoreFloat4x4(&worldInverseTranspose, XMMatrixInverse(0, XMMatrixTranspose(world)));
 
-	dirty = false;
-}
+        dirty = false;
+    }
 
 void Transform::MoveAbsolute(float x, float y, float z)
 {
