@@ -376,7 +376,7 @@ void Game::SendGPUData()
 	//Vertex Shader Data:
 	VertexShaderData vsData;
 	vsData.tint = XMFLOAT4(ImGui_colorTint[0], ImGui_colorTint[1], ImGui_colorTint[2], ImGui_colorTint[3]);
-	vsData.offset = XMFLOAT3(ImGui_offset[0], ImGui_offset[1], ImGui_offset[2]);
+	//vsData.offset = XMFLOAT3(ImGui_offset[0], ImGui_offset[1], ImGui_offset[2]); //TODO: UPDATE
 
 	D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
 	Graphics::Context->Map(vertexConstBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer); //overwrite and "freeze" GPU
@@ -457,7 +457,7 @@ void Game::BuildUI() {
 	while (refreshTime < ImGui::GetTime()) 
 	{
 		static float phase = 0.0f;
-		vals[valOffset] = sin(phase * refreshTime);
+		vals[valOffset] = (float)sin(phase * refreshTime);
 		valOffset = (valOffset + 1) % 90;
 		phase += .1f * valOffset;
 		refreshTime += 1.0f / 60.0f;
