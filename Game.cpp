@@ -36,6 +36,7 @@ void Game::Initialize()
 	LoadShaders();
 	CreateGeometry();
 	CreateBuffers();
+	CreateEntities();
 
 	// Set initial graphics API state
 	//  - These settings persist until we change them
@@ -216,9 +217,9 @@ void Game::CreateGeometry()
 	//    since we're describing the triangle in terms of the window itself
 	Vertex triVerts[] =
 	{
-		{ XMFLOAT3(-0.5f, +0.0f, +0.0f), red },
-		{ XMFLOAT3(-1.0f, -1.0f, +0.0f), blue },
-		{ XMFLOAT3(-0.0f, -1.0f, +0.0f), green },
+		{ XMFLOAT3(-0.0f, +0.5f, +0.0f), red },
+		{ XMFLOAT3(-0.5f, -0.5f, +0.0f), blue },
+		{ XMFLOAT3(+0.5f, -0.5f, +0.0f), green },
 	};
 
 	int triIndexes[] = { 0, 2, 1 };
@@ -227,10 +228,10 @@ void Game::CreateGeometry()
 
 	//make a square
 	Vertex squareVerts[] = {
-		{ XMFLOAT3(+1.0f, +1.0f, +0.0f), black},
-		{ XMFLOAT3(+1.0f, +0.75f, +0.0f), white},
-		{ XMFLOAT3(+0.75f, +0.75f, +0.0f), black},
-		{ XMFLOAT3(+0.75f, +1.0f, +0.0f), white}
+		{ XMFLOAT3(+0.125f, +0.125f, +0.0f), black},
+		{ XMFLOAT3(+0.125f, -0.125f, +0.0f), white},
+		{ XMFLOAT3(-0.125f, -0.125f, +0.0f), black},
+		{ XMFLOAT3(-0.125f, +0.125f, +0.0f), white}
 	};
 
 	int squareIndexes[] = { 0, 1, 2, 0, 2, 3 };
@@ -267,6 +268,35 @@ void Game::CreateGeometry()
 	};
 	
 	meshPtrs.push_back(std::make_shared<Mesh>(amongVerts, 12, amongIndexes, 30));
+}
+
+void Game::CreateEntities()
+{
+	//Note: when we make an entity, make sure we're adding the float arrays to entityData
+	for (int i = 0; i < meshPtrs.size(); i++) {
+		entityPtrs.push_back(std::make_shared<Entity>(meshPtrs[i]));
+		for (int dataCount = 0; dataCount < 6; ++dataCount) {
+			entityData.push_back(0);
+		}
+		for (int dataCount = 0; dataCount < 3; ++dataCount) {
+			entityData.push_back(1);
+		}
+	}
+	
+	entityPtrs.push_back(std::make_shared<Entity>(meshPtrs[2]));
+	entityPtrs.push_back(std::make_shared<Entity>(meshPtrs[2]));
+	entityPtrs.push_back(std::make_shared<Entity>(meshPtrs[2]));
+	for (int entityCount = 0; entityCount < 3; ++entityCount) {
+		for (int dataCount = 0; dataCount < 6; ++dataCount) {
+			entityData.push_back(0);
+		}
+		for (int dataCount = 0; dataCount < 3; ++dataCount) {
+			entityData.push_back(1);
+		}
+	}
+	
+
+
 }
 
 
@@ -342,9 +372,9 @@ void Game::Draw(float deltaTime, float totalTime)
 	}
 	*/
 
-	//draw meshes in the ptr list
-	for (int i = 0; i < meshPtrs.size(); ++i) {
-		meshPtrs[i].get()->Draw();
+	//Draw entities
+	for (int i = 0; i < entityPtrs.size(); ++i) {
+		entityPtrs[i].get()->Draw(vertexConstBuffer.Get(), ImGui_colorTint);
 	}
 
 	//Last thing to draw: ImGui!
@@ -471,10 +501,14 @@ void Game::BuildUI() {
 
 	//Mesh Info
 	ImGui::Begin("Mesh Information");
+	ImGui::SeparatorText("Tint Scene: ");
+	ImGui::DragFloat4("color tint", &ImGui_colorTint[0], 0.01f, 0.0f, 1.0f);
+
+	ImGui::SeparatorText("Meshes and Entities:");
 
 	if (ImGui::CollapsingHeader("Mesh Information")) {
 		for (int i = 0; i < meshPtrs.size(); ++i) {
-			if (ImGui::CollapsingHeader("Mesh ##xx" + (i+1))) {
+			if (ImGui::CollapsingHeader(std::format("Mesh {}", i).c_str())) {
 				ImGui::Text("Verts: %d", meshPtrs[i].get()->GetVertextCount());
 				ImGui::Text("Indices: %d", meshPtrs[i].get()->GetIndexCount());
 				ImGui::Text("Tris: %d", meshPtrs[i].get()->GetIndexCount()/3);
@@ -482,14 +516,39 @@ void Game::BuildUI() {
 		}
 	}
 
+	if (ImGui::CollapsingHeader("Entity Information")) {
+		for (int i = 0; i < entityPtrs.size(); ++i) {
+			if (ImGui::CollapsingHeader(std::format("Entity {}", i).c_str())) {
+
+				float pos[3] = { entityData[i * 9], entityData[i * 9 + 1], entityData[i * 9 + 2] };
+				float rot[3] = { entityData[i * 9 + 3], entityData[i * 9 + 4], entityData[i * 9 + 5] };
+				float scale[3] = { entityData[i * 9 + 6], entityData[i * 9 + 7], entityData[i * 9 + 8] };
+
+				ImGui::DragFloat3(std::format("Position {}", i).c_str(), pos, .01f, -1.0f, 1.0f);
+				ImGui::DragFloat3(std::format("Rotation {}", i).c_str(), rot, .01f, -2.0f * 3.14159265358979f, 2.0f * 3.14159265358979f);
+				ImGui::DragFloat3(std::format("Scale {}", i).c_str(), scale, .01f, -1000.0f, 1000.0f);
+
+				//I hate this....
+				entityData[i * 9] = pos[0];
+				entityData[i * 9 + 1] = pos[1];
+				entityData[i * 9 + 2] = pos[2];
+				entityData[i * 9 + 3] = rot[0];
+				entityData[i * 9 + 4] = rot[1];
+				entityData[i * 9 + 5] = rot[2];
+				entityData[i * 9 + 6] = scale[0];
+				entityData[i * 9 + 7] = scale[1];
+				entityData[i * 9 + 8] = scale[2];
+
+				entityPtrs[i].get()->GetTransform().get()->SetPosition(pos[0], pos[1], pos[2]);
+				entityPtrs[i].get()->GetTransform().get()->SetRotation(rot[0], rot[1], rot[2]);
+				entityPtrs[i].get()->GetTransform().get()->SetScale(scale[0], scale[1], scale[2]);
+
+			}
+		}
+	}
+
 	ImGui::End(); //end Mesh Information
 
-	ImGui::Begin("Tint and Offset"); 
-
-	ImGui::DragFloat3("X, Y, Z offset", &ImGui_offset[0], 0.01f, -1.0f, 1.0f);
-	ImGui::DragFloat4("color tint", &ImGui_colorTint[0], 0.01f, 0.0f, 1.0f);
-
-	ImGui::End();
 }
 
 

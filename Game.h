@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include "Mesh.h"
+#include "Entity.h"
 
 class Game
 {
@@ -25,10 +26,12 @@ private:
 
 
 	std::vector<std::shared_ptr<Mesh>> meshPtrs;
+	std::vector<std::shared_ptr<Entity>> entityPtrs;
 
 	// Initialization helper methods - feel free to customize, combine, remove, etc.
 	void LoadShaders();
 	void CreateGeometry();
+	void CreateEntities();
 	void CreateBuffers();
 	void SendGPUData();
 	void UpdateImGui(float deltaTime);
@@ -52,10 +55,13 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexConstBuffer;
 
 
+
+
 	//ImGui data
 	float ImGui_bgColor[4];
 	float ImGui_colorTint[4];
 	float ImGui_offset[3];
 	bool ImGui_Demo_Show = false;
+	std::vector<float> entityData;
 };
 

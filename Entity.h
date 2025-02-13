@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <wrl/client.h>
 
 #include "Transform.h"
 #include "Mesh.h"
@@ -8,16 +9,24 @@ class Entity
 {
 
 public:
-	Entity(Mesh* mesh);
+	Entity(std::shared_ptr<Mesh> meshPtr);
 	~Entity();
 	Entity(const Entity&) = delete;
 	Entity& operator=(const Entity&) = delete;
 
+	std::shared_ptr<Mesh> GetMesh();
+	std::shared_ptr<Transform> GetTransform();
 
+	void Draw(ID3D11Buffer* vertexConstBuffer, float tint[4]);
 
 private:
 
 	std::shared_ptr<Transform> sharedTransform;
 	std::shared_ptr<Mesh> sharedMesh;
+
+
+
+	void SendGPUData(ID3D11Buffer* vertexConstBuffer, float tint[4]);
+	
 };
 

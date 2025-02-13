@@ -9,7 +9,6 @@ public:
 
 
 	Transform();
-	Transform(const Transform& other);
 	~Transform();
 	Transform(const Transform&) = delete; // Remove copy constructor
 	Transform& operator=(const Transform&) = delete; // Remove copy-assignment operator
