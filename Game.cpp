@@ -37,6 +37,10 @@ void Game::Initialize()
 	CreateGeometry();
 	CreateBuffers();
 	CreateEntities();
+	CreateCameras();
+
+	
+
 
 	// Set initial graphics API state
 	//  - These settings persist until we change them
@@ -186,6 +190,13 @@ void Game::CreateBuffers() {
 	Graphics::Device->CreateBuffer(&vertexBufferDesc, 0, vertexConstBuffer.GetAddressOf());
 }
 
+void Game::CreateCameras()
+{
+	cameraPtrs.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(0, 2, -5)));
+	cameraPtrs.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(0, -2, 5)));
+	cameraPtrs.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(-5, 0, -5)));
+}
+
 
 // --------------------------------------------------------
 // Creates the geometry we're going to draw
@@ -306,6 +317,10 @@ void Game::CreateEntities()
 // --------------------------------------------------------
 void Game::OnResize()
 {
+	for (int i = 0; i < cameraPtrs.size(); ++i) {
+		cameraPtrs[i].get()->UpdateProjectionMatrix(Window::AspectRatio());
+	}
+	
 }
 
 
@@ -320,6 +335,11 @@ void Game::Update(float deltaTime, float totalTime)
 	//Build the Debug UI
 	BuildUI();
 
+
+	//update Camera:
+	if (cameraIndex < cameraPtrs.size()) {
+		cameraPtrs[cameraIndex].get()->Update(deltaTime);
+	}
 
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::KeyDown(VK_ESCAPE))
@@ -374,7 +394,9 @@ void Game::Draw(float deltaTime, float totalTime)
 
 	//Draw entities
 	for (int i = 0; i < entityPtrs.size(); ++i) {
-		entityPtrs[i].get()->Draw(vertexConstBuffer.Get(), ImGui_colorTint);
+		if (cameraIndex < cameraPtrs.size()) {
+			entityPtrs[i].get()->Draw(vertexConstBuffer.Get(), ImGui_colorTint, cameraPtrs[cameraIndex].get());
+		}
 	}
 
 	//Last thing to draw: ImGui!
@@ -406,7 +428,7 @@ void Game::SendGPUData()
 	//Vertex Shader Data:
 	VertexShaderData vsData;
 	vsData.tint = XMFLOAT4(ImGui_colorTint[0], ImGui_colorTint[1], ImGui_colorTint[2], ImGui_colorTint[3]);
-	//vsData.offset = XMFLOAT3(ImGui_offset[0], ImGui_offset[1], ImGui_offset[2]); //TODO: UPDATE
+	
 
 	D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
 	Graphics::Context->Map(vertexConstBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer); //overwrite and "freeze" GPU
@@ -548,6 +570,20 @@ void Game::BuildUI() {
 	}
 
 	ImGui::End(); //end Mesh Information
+
+	ImGui::Begin("Cameras");
+		ImGui::SeparatorText(std::format("Camera Index Is: {}", cameraIndex).c_str());
+		if (ImGui::Button("Next Camera")) {
+			cameraIndex += 1;
+			cameraIndex %= cameraPtrs.size();
+			printf("%d", cameraIndex);
+		}
+		if (ImGui::Button("Prev Camera")) {
+			cameraIndex += cameraPtrs.size()-1;
+			cameraIndex %= cameraPtrs.size();
+			printf("%d", cameraIndex);
+		}
+	ImGui::End();
 
 }
 

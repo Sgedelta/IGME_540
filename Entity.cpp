@@ -30,18 +30,20 @@ std::shared_ptr<Transform> Entity::GetTransform()
 	return sharedTransform;
 }
 
-void Entity::Draw(ID3D11Buffer *vertexConstBuffer, float tint[4])
+void Entity::Draw(ID3D11Buffer *vertexConstBuffer, float tint[4], Camera* cameraPtr)
 {
-	SendGPUData(vertexConstBuffer, tint);
+	SendGPUData(vertexConstBuffer, tint, cameraPtr);
 	sharedMesh.get()->Draw();
 }
 
-void Entity::SendGPUData(ID3D11Buffer *vertexConstBuffer, float tint[4])
+void Entity::SendGPUData(ID3D11Buffer *vertexConstBuffer, float tint[4], Camera* cameraPtr)
 {
 	//Vertex Shader Data:
 	VertexShaderData vsData;
 	vsData.tint = XMFLOAT4(tint[0], tint[1], tint[2], tint[3]);
 	vsData.worldMatrix = sharedTransform->GetWorldMatrix();
+	vsData.projectionMatrix = cameraPtr->GetProjectionMatrix();
+	vsData.viewMatrix = cameraPtr->GetViewMatrix();
 
 	D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
 	Graphics::Context->Map(vertexConstBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer); //overwrite and "freeze" GPU

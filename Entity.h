@@ -4,6 +4,7 @@
 
 #include "Transform.h"
 #include "Mesh.h"
+#include "Camera.h"
 
 class Entity
 {
@@ -17,7 +18,7 @@ public:
 	std::shared_ptr<Mesh> GetMesh();
 	std::shared_ptr<Transform> GetTransform();
 
-	void Draw(ID3D11Buffer* vertexConstBuffer, float tint[4]);
+	void Draw(ID3D11Buffer* vertexConstBuffer, float tint[4], Camera* cameraPtr);
 
 private:
 
@@ -26,7 +27,7 @@ private:
 
 
 
-	void SendGPUData(ID3D11Buffer* vertexConstBuffer, float tint[4]);
+	void SendGPUData(ID3D11Buffer* vertexConstBuffer, float tint[4], Camera* cameraPtr);
 	
 };
 

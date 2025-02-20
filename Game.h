@@ -6,6 +6,7 @@
 #include <memory>
 #include "Mesh.h"
 #include "Entity.h"
+#include "Camera.h"
 
 class Game
 {
@@ -27,12 +28,16 @@ private:
 
 	std::vector<std::shared_ptr<Mesh>> meshPtrs;
 	std::vector<std::shared_ptr<Entity>> entityPtrs;
+	std::vector<std::shared_ptr<Camera>> cameraPtrs;
+	int cameraIndex = 0;
+
 
 	// Initialization helper methods - feel free to customize, combine, remove, etc.
 	void LoadShaders();
 	void CreateGeometry();
 	void CreateEntities();
 	void CreateBuffers();
+	void CreateCameras();
 	void SendGPUData();
 	void UpdateImGui(float deltaTime);
 	void BuildUI();
