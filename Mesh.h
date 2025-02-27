@@ -9,7 +9,8 @@ class Mesh
 {
 public:
 
-	Mesh(Vertex vertexList[], int vertexCount, int indexList[], int indexCount);
+	Mesh(Vertex vertexList[], int vertexCount, UINT indexList[], int indexCount);
+	Mesh(const char* objFile);
 	~Mesh();
 	Mesh(const Mesh&) = delete; // Remove copy constructor
 	Mesh& operator=(const Mesh&) = delete; // Remove copy-assignment operator
@@ -25,6 +26,8 @@ public:
 private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexBuffer;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> indexBuffer;
+
+	void CreateBuffers(Vertex vertexList[], int vertexCount, UINT indexList[], int indexCount);
 
 	int indexCount;
 	int vertexCount;

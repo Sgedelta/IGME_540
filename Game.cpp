@@ -203,7 +203,11 @@ void Game::CreateCameras()
 // --------------------------------------------------------
 void Game::CreateGeometry()
 {
-	// Create some temporary variables to represent colors
+	//Old Code:
+	{
+		/*
+		* OLD CODE:
+		// Create some temporary variables to represent colors
 	// - Not necessary, just makes things more readable
 	XMFLOAT4 red = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
 	XMFLOAT4 green = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
@@ -279,6 +283,12 @@ void Game::CreateGeometry()
 	};
 	
 	meshPtrs.push_back(std::make_shared<Mesh>(amongVerts, 12, amongIndexes, 30));
+		*/
+	}
+
+
+	meshPtrs.push_back(std::make_shared<Mesh>(FixPath("../../Assets/Models/Cube.obj")));
+	
 }
 
 void Game::CreateEntities()
