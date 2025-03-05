@@ -23,6 +23,7 @@ cbuffer ExternalData : register(b0)
 	
 }
 
+
 // --------------------------------------------------------
 // The entry point (main method) for our pixel shader
 // 
@@ -38,5 +39,5 @@ float4 main(VertexToPixel input) : SV_TARGET
 	// - This color (like most values passing through the rasterizer) is 
 	//   interpolated for each pixel between the corresponding vertices 
 	//   of the triangle we're rendering
-    return float4(colorTint.x, colorTint.y, colorTint.z, colorTint.w);
+    return float4(abs(input.normal.x), abs(input.normal.y), abs(input.normal.z), 1);
 }

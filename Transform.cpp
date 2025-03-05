@@ -10,10 +10,9 @@ Transform::Transform()
 	rotation = XMFLOAT3(0, 0, 0);
 	scale = XMFLOAT3(1, 1, 1);
 
-	XMStoreFloat4x4(&worldMatrix, XMMatrixIdentity());
-	XMStoreFloat4x4(&worldInverseTranspose, XMMatrixIdentity());
 
 
+	RecalculateWorldAndTranspose();
 }
 
 Transform::~Transform()
@@ -108,7 +107,7 @@ void Transform::RecalculateWorldAndTranspose()
 	XMStoreFloat4x4(&worldMatrix, world);
 	XMStoreFloat4x4(&worldInverseTranspose, XMMatrixInverse(0, XMMatrixTranspose(world)));
 
-        dirty = false;
+    dirty = false;
 }
 
 

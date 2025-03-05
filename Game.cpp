@@ -197,11 +197,17 @@ void Game::CreateShaderToEntity()
 		Graphics::Device, Graphics::Context, FixPath(L"VertexShader.cso").c_str());
 	std::shared_ptr<SimplePixelShader> ps = std::make_shared<SimplePixelShader>(
 		Graphics::Device, Graphics::Context, FixPath(L"PixelShader.cso").c_str());
+	std::shared_ptr<SimplePixelShader> uvDebugPS = std::make_shared<SimplePixelShader>(
+		Graphics::Device, Graphics::Context, FixPath(L"DebugUVsPS.cso").c_str());
+	std::shared_ptr<SimplePixelShader> normalDebugPS = std::make_shared<SimplePixelShader>(
+		Graphics::Device, Graphics::Context, FixPath(L"DebugNormalsPS.cso").c_str());
 
 	//make materials:
-	std::shared_ptr<Material> basicMatPtr1 = std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps);
-	std::shared_ptr<Material> basicMatPtr2 = std::make_shared<Material>(XMFLOAT4(1, 0, 0, 1), vs, ps);
-	std::shared_ptr<Material> basicMatPtr3 = std::make_shared<Material>(XMFLOAT4(0, 1, 0, 1), vs, ps);
+	std::vector<std::shared_ptr<Material>> materials;
+
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps)); //tintMaterial
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(0, 0, 0, 1), vs, uvDebugPS)); //uvDebugMaterial
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(0, 0, 0, 1), vs, normalDebugPS)); //normalDebugMaterial
 
 	//load meshes
 	meshPtrs.push_back(std::make_shared<Mesh>(FixPath("../../Assets/Models/cube.obj").c_str()));
@@ -212,14 +218,28 @@ void Game::CreateShaderToEntity()
 
 	//make entities
 		//Note: when we make an entity, make sure we're adding the float arrays to entityData
-	for (int i = 0; i < meshPtrs.size(); i++) {
-		entityPtrs.push_back(std::make_shared<Entity>(meshPtrs[i], basicMatPtr1));
-		for (int dataCount = 0; dataCount < 6; ++dataCount) {
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < meshPtrs.size(); j++) {
+			entityPtrs.push_back(std::make_shared<Entity>(meshPtrs[j], materials[i]));
+			
+			//position:
+			entityData.push_back(j * 2.5); //x
+			entityData.push_back(i * 3); //y
+			entityData.push_back(0); //z
+
+			//rotation:
 			entityData.push_back(0);
-		}
-		//scale data (last) starts as 1s
-		for (int dataCount = 0; dataCount < 3; ++dataCount) {
+			entityData.push_back(0);
+			entityData.push_back(0);
+
+			//scale:
 			entityData.push_back(1);
+			entityData.push_back(1);
+			entityData.push_back(1);
+
+			//set position and stuff:
+			entityPtrs[meshPtrs.size() * i + j].get()->GetTransform()->SetPosition(j * 2.5, i*3, 0);
+			
 		}
 	}
 }

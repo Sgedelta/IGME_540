@@ -58,7 +58,7 @@ private:
 	DirectX::XMFLOAT4X4 worldMatrix;
 	DirectX::XMFLOAT4X4 worldInverseTranspose;
 
-	bool dirty = false;
+	bool dirty = true;
 	bool rotDirty = false;
 };
 
