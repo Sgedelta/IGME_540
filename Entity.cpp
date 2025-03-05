@@ -67,7 +67,7 @@ void Entity::SendGPUData( float tint[4], Camera* cameraPtr)
 	sharedMaterial->GetVertexShader()->SetFloat2("uv", XMFLOAT2(0, 0));
 	sharedMaterial->GetVertexShader()->SetFloat3("normal", XMFLOAT3(0, 0, 0));
 	sharedMaterial->GetVertexShader()->SetMatrix4x4("worldMatrix", sharedTransform.get()->GetWorldMatrix());
-	sharedMaterial->GetVertexShader()->SetMatrix4x4("viewMatrx", cameraPtr->GetViewMatrix() );
+	sharedMaterial->GetVertexShader()->SetMatrix4x4("viewMatrix", cameraPtr->GetViewMatrix() );
 	sharedMaterial->GetVertexShader()->SetMatrix4x4("projectionMatrix", cameraPtr->GetProjectionMatrix());
 
 	//actually send data we bound
