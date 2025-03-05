@@ -7,12 +7,15 @@
 #include "Mesh.h"
 #include "BufferStructs.h"
 #include "Graphics.h"
+#include "SimpleShader.h"
+#include "Material.h"
 
 using namespace DirectX;
 
-Entity::Entity(std::shared_ptr<Mesh> meshPtr)
+Entity::Entity(std::shared_ptr<Mesh> meshPtr, std::shared_ptr<Material> mat)
 {
 	sharedMesh = meshPtr;
+	sharedMaterial = mat;
 	sharedTransform = std::make_shared<Transform>();
 }
 
@@ -30,28 +33,45 @@ std::shared_ptr<Transform> Entity::GetTransform()
 	return sharedTransform;
 }
 
-void Entity::Draw(ID3D11Buffer *vertexConstBuffer, float tint[4], Camera* cameraPtr)
+std::shared_ptr<Material> Entity::GetMaterial()
 {
-	SendGPUData(vertexConstBuffer, tint, cameraPtr);
+	return sharedMaterial;
+}
+
+void Entity::SetMaterial(std::shared_ptr<Material> matPtr)
+{
+	sharedMaterial = matPtr;
+}
+
+void Entity::Draw( float tint[4], Camera* cameraPtr)
+{
+	SendGPUData(tint, cameraPtr);
 	sharedMesh.get()->Draw();
 }
 
-void Entity::SendGPUData(ID3D11Buffer *vertexConstBuffer, float tint[4], Camera* cameraPtr)
+void Entity::SendGPUData( float tint[4], Camera* cameraPtr)
 {
-	//Vertex Shader Data:
-	VertexShaderData vsData;
-	vsData.tint = XMFLOAT4(tint[0], tint[1], tint[2], tint[3]);
-	vsData.worldMatrix = sharedTransform->GetWorldMatrix();
-	vsData.projectionMatrix = cameraPtr->GetProjectionMatrix();
-	vsData.viewMatrix = cameraPtr->GetViewMatrix();
+	//bind our shaders:
+	sharedMaterial->GetVertexShader()->SetShader();
+	sharedMaterial->GetPixelShader()->SetShader();
 
-	D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
-	Graphics::Context->Map(vertexConstBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer); //overwrite and "freeze" GPU
+	XMFLOAT4 combinedTint = XMFLOAT4(
+		sharedMaterial->GetColorTint().x * tint[0],
+		sharedMaterial->GetColorTint().y * tint[1],
+		sharedMaterial->GetColorTint().z * tint[2],
+		sharedMaterial->GetColorTint().w * tint[4]
+		);
 
-	memcpy(mappedBuffer.pData, &vsData, sizeof(vsData)); // populate actual data
+	sharedMaterial->GetPixelShader()->SetFloat4("colorTint", combinedTint);
 
-	Graphics::Context->Unmap(vertexConstBuffer, 0); // "unfreeze" GPU, allowing it read access again
+	sharedMaterial->GetVertexShader()->SetFloat2("uv", XMFLOAT2(0, 0));
+	sharedMaterial->GetVertexShader()->SetFloat3("normal", XMFLOAT3(0, 0, 0));
+	sharedMaterial->GetVertexShader()->SetMatrix4x4("worldMatrix", sharedTransform.get()->GetWorldMatrix());
+	sharedMaterial->GetVertexShader()->SetMatrix4x4("viewMatrx", cameraPtr->GetViewMatrix() );
+	sharedMaterial->GetVertexShader()->SetMatrix4x4("projectionMatrix", cameraPtr->GetProjectionMatrix());
 
-	//bind to vertex Shader
-	Graphics::Context->VSSetConstantBuffers(0, 1, &vertexConstBuffer);
+	//actually send data we bound
+	sharedMaterial->GetPixelShader()->CopyAllBufferData();
+	sharedMaterial->GetVertexShader()->CopyAllBufferData(); 
+
 }

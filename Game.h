@@ -7,6 +7,7 @@
 #include "Mesh.h"
 #include "Entity.h"
 #include "Camera.h"
+#include "SimpleShader.h"
 
 class Game
 {
@@ -33,12 +34,8 @@ private:
 
 
 	// Initialization helper methods - feel free to customize, combine, remove, etc.
-	void LoadShaders();
-	void CreateGeometry();
-	void CreateEntities();
-	void CreateBuffers();
+	void CreateShaderToEntity();
 	void CreateCameras();
-	void SendGPUData();
 	void UpdateImGui(float deltaTime);
 	void BuildUI();
 
@@ -51,13 +48,6 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexBuffer;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> indexBuffer;
 
-	// Shaders and shader-related constructs
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader;
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
-	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
-
-	// shader constant buffers:
-	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexConstBuffer;
 
 
 

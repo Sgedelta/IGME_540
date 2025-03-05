@@ -274,7 +274,7 @@ Mesh::Mesh(const char* objFile)
 	//
 	// *************************************
 
-	CreateBuffers(verts.data(), verts.size(), indices.data(), indices.size())
+	CreateBuffers(verts.data(), verts.size(), indices.data(), indices.size());
 }
 
 Mesh::~Mesh() {
@@ -335,7 +335,7 @@ void Mesh::CreateBuffers(Vertex vertexList[], int vertexCount, UINT indexList[],
 		//  - After the buffer is created, this description variable is unnecessary
 		D3D11_BUFFER_DESC vbd = {};
 		vbd.Usage = D3D11_USAGE_IMMUTABLE;	// Will NEVER change
-		vbd.ByteWidth = sizeof(Vertex) * vertexCount;       // 3 = number of vertices in the buffer
+		vbd.ByteWidth = sizeof(Vertex) * vertexCount;   
 		vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER; // Tells Direct3D this is a vertex buffer
 		vbd.CPUAccessFlags = 0;	// Note: We cannot access the data from C++ (this is good)
 		vbd.MiscFlags = 0;

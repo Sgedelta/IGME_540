@@ -30,13 +30,15 @@ struct VertexToPixel
 	//  v    v                v
 	float4 screenPosition	: SV_POSITION;	// XYZW position (System Value Position)
 	float2 uv				: TEXTCOORD;    
+    float3 normal			: NORMAL;
 };
 
 // Buffer
 cbuffer ExternalData : register(b0)
 {
     matrix worldMatrix;
-    float4 colorTint;
+    float2 uv : TEXTCOORD;
+    float3 normal : NORMAL;
     matrix viewMatrix;
     matrix projectionMatrix;
 	
@@ -67,7 +69,10 @@ VertexToPixel main( VertexShaderInput input )
 	//   a perspective projection matrix, which we'll get to in the future).
     output.screenPosition = mul(wvp, float4(input.localPosition, 1.0f));
 
+    output.normal = input.normal;
+	
 	output.uv = input.uv;
+
 
 	// Whatever we return will make its way through the pipeline to the
 	// next programmable stage we're using (the pixel shader for now)
