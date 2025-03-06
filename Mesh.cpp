@@ -274,7 +274,7 @@ Mesh::Mesh(const char* objFile)
 	//
 	// *************************************
 
-	CreateBuffers(verts.data(), (int)verts.size(), indices.data(), (int)indices.size());
+	CreateBuffers(verts.data(), ((int)verts.size()), indices.data(), ((int)indices.size()));
 }
 
 Mesh::~Mesh() {

@@ -227,8 +227,8 @@ void Game::CreateShaderToEntity()
 			entityPtrs.push_back(std::make_shared<Entity>(meshPtrs[j], materials[i]));
 			
 			//position:
-			entityData.push_back(j * 2.5); //x
-			entityData.push_back(i * 3); //y
+			entityData.push_back(j * 2.5f); //x
+			entityData.push_back(i * 3.0f); //y
 			entityData.push_back(0); //z
 
 			//rotation:
@@ -242,7 +242,7 @@ void Game::CreateShaderToEntity()
 			entityData.push_back(1);
 
 			//set position and stuff:
-			entityPtrs[meshPtrs.size() * i + j].get()->GetTransform()->SetPosition(j * 2.5, i*3, 0);
+			entityPtrs[meshPtrs.size() * i + j].get()->GetTransform()->SetPosition(j * 2.5f, i*3.0f, 0);
 			
 		}
 	}
