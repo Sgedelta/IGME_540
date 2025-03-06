@@ -1,6 +1,7 @@
 #include "Transform.h"
 
 #include <DirectXMath.h>
+#include <cmath>
 
 using namespace DirectX;
 
@@ -149,6 +150,12 @@ void Transform::Rotate(float pitch, float yaw, float roll)
 	rotation.x += pitch;
 	rotation.y += yaw;
 	rotation.z += roll;
+	//rotation = XMFLOAT3(
+	//	std::fmod(rotation.x, (2.0f * 3.14159265358979f)),
+	//	std::fmod(rotation.x, (2.0f * 3.14159265358979f)),
+	//	std::fmod(rotation.x, (2.0f * 3.14159265358979f))
+	//);
+
 	dirty = true;
 	rotDirty = true;
 }
@@ -158,6 +165,8 @@ void Transform::Rotate(DirectX::XMFLOAT3 rotation)
 	this->rotation.x += rotation.x;
 	this->rotation.y += rotation.y;
 	this->rotation.z += rotation.z;
+
+
 	dirty = true;
 	rotDirty = true;
 }

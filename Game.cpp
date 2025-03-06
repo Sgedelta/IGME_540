@@ -98,8 +98,8 @@ Game::~Game()
 void Game::CreateCameras()
 {
 	cameraPtrs.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(0, 2, -5)));
-	cameraPtrs.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(0, -2, 5)));
-	cameraPtrs.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(-5, 0, -5)));
+	//cameraPtrs.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(0, -2, 5)));
+	//cameraPtrs.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(-5, 0, -5)));
 }
 
 
@@ -458,7 +458,7 @@ void Game::BuildUI() {
 				float rot[3] = { entityData[i * 9 + 3], entityData[i * 9 + 4], entityData[i * 9 + 5] };
 				float scale[3] = { entityData[i * 9 + 6], entityData[i * 9 + 7], entityData[i * 9 + 8] };
 
-				ImGui::DragFloat3(std::format("Position {}", i).c_str(), pos, .01f, -1.0f, 1.0f);
+				ImGui::DragFloat3(std::format("Position {}", i).c_str(), pos, .01f, -1000.0f, 1000.0f);
 				ImGui::DragFloat3(std::format("Rotation {}", i).c_str(), rot, .01f, -2.0f * 3.14159265358979f, 2.0f * 3.14159265358979f);
 				ImGui::DragFloat3(std::format("Scale {}", i).c_str(), scale, .01f, -1000.0f, 1000.0f);
 

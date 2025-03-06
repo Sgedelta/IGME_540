@@ -30,12 +30,12 @@ XMFLOAT4X4 Camera::GetProjectionMatrix()
 void Camera::Update(float dt)
 {
 	if (Input::KeyDown('W')) {
-		transformPtr.get()->MoveRelative(0, 0, dt * moveSpeed * ( Input::KeyDown(VK_SHIFT) ? 5 : 1 ));
+		transformPtr.get()->MoveRelative(0, 0, dt * moveSpeed * (Input::KeyDown(VK_SHIFT) ? 5 : 1));
 	}
 	if (Input::KeyDown('S')) {
 		transformPtr.get()->MoveRelative(0, 0, dt * -moveSpeed * (Input::KeyDown(VK_SHIFT) ? 5 : 1));
 	}
-	
+
 	if (Input::KeyDown('D')) {
 		transformPtr.get()->MoveRelative(dt * moveSpeed * (Input::KeyDown(VK_SHIFT) ? 5 : 1), 0, 0);
 	}
@@ -55,18 +55,28 @@ void Camera::Update(float dt)
 		int cursorMovementY = Input::GetMouseYDelta();
 
 		transformPtr.get()->Rotate(cursorMovementY * mouseLookSpeed, cursorMovementX * mouseLookSpeed, 0);
-		if (transformPtr.get()->GetPitchYawRoll().y > XM_PIDIV2 ) {
-			transformPtr.get()->SetRotation(0, XM_PIDIV2, 0);
+		if (transformPtr.get()->GetPitchYawRoll().y > XM_PI) {
+			transformPtr.get()->SetRotation(0, -XM_PI, 0);
 		}
-		else if(transformPtr.get()->GetPitchYawRoll().y < -XM_PIDIV2) {
-			transformPtr.get()->SetRotation(0, -XM_PIDIV2, 0);
+		else if (transformPtr.get()->GetPitchYawRoll().y < -XM_PI) {
+			transformPtr.get()->SetRotation(0, XM_PI, 0);
 		}
 	}
 
 	UpdateViewMatrix();
 
-	//printf("%f, %f, %f", transformPtr.get()->GetPosition().x, transformPtr.get()->GetPosition().y, transformPtr.get()->GetPosition().z);
+	static int delay = 100;
+	static int counter = 0;
+	if (counter < delay) {
+		counter += 1;
+	}
+	else {
+		printf("%f, %f, %f\n", transformPtr.get()->GetPitchYawRoll().x, transformPtr.get()->GetPitchYawRoll().y, transformPtr.get()->GetPitchYawRoll().z);
+		counter = 0;
+	}
+
 }
+	
 
 void Camera::UpdateViewMatrix()
 {
