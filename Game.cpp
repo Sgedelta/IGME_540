@@ -98,8 +98,8 @@ Game::~Game()
 void Game::CreateCameras()
 {
 	cameraPtrs.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(0, 2, -5)));
-	//cameraPtrs.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(0, -2, 5)));
-	//cameraPtrs.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(-5, 0, -5)));
+	cameraPtrs.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(0, -2, 5)));
+	cameraPtrs.push_back(std::make_shared<Camera>(Window::AspectRatio(), XMFLOAT3(-5, 0, -5)));
 }
 
 
@@ -201,13 +201,17 @@ void Game::CreateShaderToEntity()
 		Graphics::Device, Graphics::Context, FixPath(L"DebugUVsPS.cso").c_str());
 	std::shared_ptr<SimplePixelShader> normalDebugPS = std::make_shared<SimplePixelShader>(
 		Graphics::Device, Graphics::Context, FixPath(L"DebugNormalsPS.cso").c_str());
+	std::shared_ptr<SimplePixelShader> custom1PS = std::make_shared<SimplePixelShader>(
+		Graphics::Device, Graphics::Context, FixPath(L"CustomPS1.cso").c_str());
 
 	//make materials:
 	std::vector<std::shared_ptr<Material>> materials;
 
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps)); //tintMaterial
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(0, 0, 0, 1), vs, uvDebugPS)); //uvDebugMaterial
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(0, 0, 0, 1), vs, normalDebugPS)); //normalDebugMaterial
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1)); //tintMaterial
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(0, 0, 0, 1), vs, uvDebugPS, 0)); //uvDebugMaterial
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(0, 0, 0, 1), vs, normalDebugPS, 0)); //normalDebugMaterial
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(0, 0, 0, 1), vs, custom1PS, 2)); //Custom Pixel Shader 1
+
 
 	//load meshes
 	meshPtrs.push_back(std::make_shared<Mesh>(FixPath("../../Assets/Models/cube.obj").c_str()));
@@ -218,7 +222,7 @@ void Game::CreateShaderToEntity()
 
 	//make entities
 		//Note: when we make an entity, make sure we're adding the float arrays to entityData
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < materials.size(); i++) {
 		for (int j = 0; j < meshPtrs.size(); j++) {
 			entityPtrs.push_back(std::make_shared<Entity>(meshPtrs[j], materials[i]));
 			

@@ -1,6 +1,8 @@
 #pragma once
 #include <memory>
 #include <wrl/client.h>
+#include <ctime>
+#include <chrono>
 
 #include "Transform.h"
 #include "Mesh.h"
@@ -34,6 +36,7 @@ private:
 
 
 	void SendGPUData( float tint[4], Camera* cameraPtr);
+	std::chrono::system_clock::time_point start;
 	
 };
 

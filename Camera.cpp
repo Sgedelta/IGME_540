@@ -65,15 +65,15 @@ void Camera::Update(float dt)
 
 	UpdateViewMatrix();
 
-	static int delay = 100;
-	static int counter = 0;
-	if (counter < delay) {
-		counter += 1;
-	}
-	else {
-		printf("%f, %f, %f\n", transformPtr.get()->GetPitchYawRoll().x, transformPtr.get()->GetPitchYawRoll().y, transformPtr.get()->GetPitchYawRoll().z);
-		counter = 0;
-	}
+	// static int delay = 100;
+	// static int counter = 0;
+	// if (counter < delay) {
+	// 	counter += 1;
+	// }
+	// else {
+	// 	//printf("%f, %f, %f\n", transformPtr.get()->GetPitchYawRoll().x, transformPtr.get()->GetPitchYawRoll().y, transformPtr.get()->GetPitchYawRoll().z);
+	// 	counter = 0;
+	// }
 
 }
 	

@@ -8,7 +8,7 @@ class Material
 
 public:
 
-	Material(DirectX::XMFLOAT4 colorTint, std::shared_ptr<SimpleVertexShader> vs, std::shared_ptr<SimplePixelShader> ps);
+	Material(DirectX::XMFLOAT4 colorTint, std::shared_ptr<SimpleVertexShader> vs, std::shared_ptr<SimplePixelShader> ps, int materialType);
 	~Material();
 	Material(const Material&) = delete; // Remove copy constructor
 	Material& operator=(const	Material&) = delete; // Remove copy-assignment operator
@@ -20,11 +20,16 @@ public:
 	std::shared_ptr<SimplePixelShader> GetPixelShader();
 	void SetPixelShader(std::shared_ptr<SimplePixelShader> ps);
 
+	int GetMaterialType();
+	void SetMaterialType(int newType);
+
+
 private:
 
 	DirectX::XMFLOAT4 colorTint;
 	std::shared_ptr<SimpleVertexShader> simpleVertexShader;
 	std::shared_ptr<SimplePixelShader> simplePixelShader;
+	int materialType;
 
 };
 

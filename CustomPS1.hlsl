@@ -19,7 +19,7 @@ struct VertexToPixel
 // Buffer
 cbuffer ExternalData : register(b0)
 {
-    float4 colorTint;
+	float timeInSeconds;
 	
 }
 
@@ -36,5 +36,12 @@ cbuffer ExternalData : register(b0)
 float4 main(VertexToPixel input) : SV_TARGET
 {
 
-    return float4(abs(input.normal.x), abs(input.normal.y), abs(input.normal.z), 1);
+
+	return float4(
+		sin(timeInSeconds), 
+		sin(timeInSeconds + 2),
+		sin(timeInSeconds + 7), 
+	1);
+
+    //return float4(sin(input.screenPosition.x * input.screenPosition.y * 50), cos(input.screenPosition.y * input.screenPosition.x * 50), tan(input.normal.x + input.normal.y + input.normal.z), 1);
 }

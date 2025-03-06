@@ -1,10 +1,12 @@
 #include "Material.h"
 
-Material::Material(DirectX::XMFLOAT4 colorTint, std::shared_ptr<SimpleVertexShader> vs, std::shared_ptr<SimplePixelShader> ps)
+Material::Material(DirectX::XMFLOAT4 colorTint, std::shared_ptr<SimpleVertexShader> vs, std::shared_ptr<SimplePixelShader> ps, int materialType)
 {
 	this->colorTint = colorTint;
 	simpleVertexShader = vs;
 	simplePixelShader = ps;
+
+	this->materialType = materialType;
 }
 
 Material::~Material()
@@ -39,4 +41,14 @@ std::shared_ptr<SimplePixelShader> Material::GetPixelShader()
 void Material::SetPixelShader(std::shared_ptr<SimplePixelShader> ps)
 {
 	simplePixelShader = ps;
+}
+
+int Material::GetMaterialType()
+{
+	return materialType;
+}
+
+void Material::SetMaterialType(int newType)
+{
+	materialType = newType;
 }
