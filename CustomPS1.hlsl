@@ -50,7 +50,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3 hsv = float3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
 	
 	//now, change the hue value based on time
-    hsv.x += (timeInSeconds + sin(input.screenPosition.x / 100)) / 5; //update!
+    hsv.x += (timeInSeconds + sin(input.screenPosition.x / 100)) / 5;
 	
 	//return back to rgb
     float4 K2 = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);

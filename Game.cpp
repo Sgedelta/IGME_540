@@ -23,6 +23,8 @@
 #pragma comment(lib, "d3dcompiler.lib")
 #include <d3dcompiler.h>
 
+#include "WICTextureLoader.h"
+
 // For the DirectX Math library
 using namespace DirectX;
 
@@ -192,6 +194,32 @@ void Game::CreateShaderToEntity()
 	}
 
 
+	//load textures
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> grayRocksText;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> mossyBrickText;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> REDACTEDText;
+
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/gray_rocks_diff_4K.jpg").c_str(), nullptr, &grayRocksText);
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/mossy_brick_diff_4K.jpg").c_str(), nullptr, &mossyBrickText);
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/REDACTED.png").c_str(), nullptr, &REDACTEDText);
+
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState;
+
+	D3D11_SAMPLER_DESC samplerDesc;
+	memset(&samplerDesc, 0, sizeof(D3D11_SAMPLER_DESC));
+
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+
+	samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+	samplerDesc.MaxAnisotropy = 16;
+
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	Graphics::Device.Get()->CreateSamplerState(&samplerDesc, samplerState.GetAddressOf());
+
+
 	//load shaders:
 	std::shared_ptr<SimpleVertexShader> vs = std::make_shared<SimpleVertexShader>(
 		Graphics::Device, Graphics::Context, FixPath(L"VertexShader.cso").c_str());
@@ -203,14 +231,30 @@ void Game::CreateShaderToEntity()
 		Graphics::Device, Graphics::Context, FixPath(L"DebugNormalsPS.cso").c_str());
 	std::shared_ptr<SimplePixelShader> custom1PS = std::make_shared<SimplePixelShader>(
 		Graphics::Device, Graphics::Context, FixPath(L"CustomPS1.cso").c_str());
+	std::shared_ptr<SimplePixelShader> twoTexturePS = std::make_shared<SimplePixelShader>(
+		Graphics::Device, Graphics::Context, FixPath(L"TwoTextureShader.cso").c_str());
 
 	//make materials:
-	std::vector<std::shared_ptr<Material>> materials;
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1)); 
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1));
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, twoTexturePS, 1));
+	materials[2]->SetUVOffset(XMFLOAT2(2, 1));
+	materials[2]->SetUVScale(XMFLOAT2(5, 5));
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1)); 
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(.2, 1, .5, 1), vs, ps, 1));
+	materials[4]->SetUVOffset(XMFLOAT2(2, 1));
+	materials[4]->SetUVScale(XMFLOAT2(5, 5));
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(.8, 1, .3, 1), vs, twoTexturePS, 1));
 
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1)); //tintMaterial
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(0, 0, 0, 1), vs, uvDebugPS, 0)); //uvDebugMaterial
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(0, 0, 0, 1), vs, normalDebugPS, 0)); //normalDebugMaterial
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(0, 0, 0, 1), vs, custom1PS, 2)); //Custom Pixel Shader 1
+
+
+	for (int i = 0; i < materials.size(); ++i) {
+		materials[i]->AddTextureSRV("SurfaceTexture", (i>=3) ? grayRocksText : mossyBrickText);
+		if (i % 3 == 2) {
+			materials[i]->AddTextureSRV("SurfaceTexture2", REDACTEDText);
+		}
+		materials[i]->AddSampler("BasicSampler", samplerState);
+	}
 
 
 	//load meshes
@@ -482,6 +526,29 @@ void Game::BuildUI() {
 				entityPtrs[i].get()->GetTransform().get()->SetScale(scale[0], scale[1], scale[2]);
 
 			}
+		}
+	}
+
+	ImGui::SeparatorText("Materials:");
+	if (ImGui::CollapsingHeader("Material Information")) {
+		for (int i = 0; i < materials.size(); ++i) {
+			float tint[4]  { materials[i]->GetColorTint().x, materials[i]->GetColorTint().y, materials[i]->GetColorTint().z, materials[i]->GetColorTint().w };
+			float scale[2] { materials[i]->GetUVScale().x, materials[i]->GetUVScale().y,  };
+			float offset[4]{ materials[i]->GetUVOffset().x, materials[i]->GetUVOffset().y, };
+
+			ImGui::DragFloat4(std::format("Color Tint {}", i).c_str(), tint, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat2(std::format("UV Scale {}", i).c_str(), scale, 0.01f, 0.01f, 1000.0f);
+			ImGui::DragFloat2(std::format("UV Offset {}", i).c_str(), offset, 0.01f, 0.01f, 1000.0f);
+
+			materials[i]->SetColorTint(XMFLOAT4(tint[0], tint[1], tint[2], tint[3]));
+			materials[i]->SetUVScale(XMFLOAT2(scale[0], scale[1]));
+			materials[i]->SetUVOffset(XMFLOAT2(offset[0], offset[1]));
+
+			ImGui::SeparatorText("Textures:");
+			for (auto& t : materials[i]->GetTextureSRVs()) { 
+				//ImGui::Image((void*)t.second.Get());
+			}
+
 		}
 	}
 

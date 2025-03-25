@@ -48,7 +48,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> vertexBuffer;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> indexBuffer;
 
-
+	std::vector<std::shared_ptr<Material>> materials;
 
 
 
