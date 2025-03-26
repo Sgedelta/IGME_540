@@ -1,12 +1,13 @@
 #include "Material.h"
 
-Material::Material(DirectX::XMFLOAT4 colorTint, std::shared_ptr<SimpleVertexShader> vs, std::shared_ptr<SimplePixelShader> ps, int materialType)
+Material::Material(DirectX::XMFLOAT4 colorTint, std::shared_ptr<SimpleVertexShader> vs, std::shared_ptr<SimplePixelShader> ps, int materialType, float roughness)
 {
 	this->colorTint = colorTint;
 	simpleVertexShader = vs;
 	simplePixelShader = ps;
 
 	this->materialType = materialType;
+	this->roughness = roughness;
 
 	uvScale = DirectX::XMFLOAT2(1, 1);
 	uvOffset = DirectX::XMFLOAT2(0, 0);
@@ -96,7 +97,7 @@ void Material::AddSampler(std::string samplerName, Microsoft::WRL::ComPtr<ID3D11
 	samplers.insert({ samplerName, sampler });
 }
 
-void Material::PrepareMaterial()
+void Material::PrepareMaterial(Camera* cameraPtr)
 {
 	//bind
 	simpleVertexShader->SetShader();
@@ -109,4 +110,6 @@ void Material::PrepareMaterial()
 	//send some data to the shader
 	simplePixelShader->SetFloat2("uvScale", uvScale);
 	simplePixelShader->SetFloat2("uvOffset", uvOffset);
+	simplePixelShader->SetFloat3("cameraPos", cameraPtr->GetTransform()->GetPosition());
+	simplePixelShader->SetFloat("roughness", roughness);
 }

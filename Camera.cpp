@@ -27,6 +27,11 @@ XMFLOAT4X4 Camera::GetProjectionMatrix()
 	return projectionMat;
 }
 
+std::shared_ptr<Transform> Camera::GetTransform()
+{
+	return transformPtr;
+}
+
 void Camera::Update(float dt)
 {
 	if (Input::KeyDown('W')) {

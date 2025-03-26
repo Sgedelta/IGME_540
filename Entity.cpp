@@ -56,7 +56,7 @@ void Entity::Draw( float tint[4], Camera* cameraPtr)
 void Entity::SendGPUData( float tint[4], Camera* cameraPtr)
 {
 	//bind our shaders:
-	sharedMaterial->PrepareMaterial();
+	sharedMaterial->PrepareMaterial(cameraPtr);
 	
 	float elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count() / 1000.0f;
 

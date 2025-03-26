@@ -235,16 +235,16 @@ void Game::CreateShaderToEntity()
 		Graphics::Device, Graphics::Context, FixPath(L"TwoTextureShader.cso").c_str());
 
 	//make materials:
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1)); 
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1));
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, twoTexturePS, 1));
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1, 0.0f)); 
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1, 0.0f));
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1, 0.5f));
 	materials[2]->SetUVOffset(XMFLOAT2(2, 1));
 	materials[2]->SetUVScale(XMFLOAT2(5, 5));
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1)); 
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(.2, 1, .5, 1), vs, ps, 1));
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1, 0.5f)); 
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(.2, 1, .5, 1), vs, ps, 1, 1.0f));
 	materials[4]->SetUVOffset(XMFLOAT2(2, 1));
 	materials[4]->SetUVScale(XMFLOAT2(5, 5));
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(.8, 1, .3, 1), vs, twoTexturePS, 1));
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(.8, 1, .3, 1), vs, ps, 1, 1.0f));
 
 
 

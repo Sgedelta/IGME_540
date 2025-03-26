@@ -3,13 +3,14 @@
 #include <memory>
 #include <unordered_map>
 #include "SimpleShader.h"
+#include "Camera.h"
 
 class Material
 {
 
 public:
 
-	Material(DirectX::XMFLOAT4 colorTint, std::shared_ptr<SimpleVertexShader> vs, std::shared_ptr<SimplePixelShader> ps, int materialType);
+	Material(DirectX::XMFLOAT4 colorTint, std::shared_ptr<SimpleVertexShader> vs, std::shared_ptr<SimplePixelShader> ps, int materialType, float roughness);
 	~Material();
 	Material(const Material&) = delete; // Remove copy constructor
 	Material& operator=(const	Material&) = delete; // Remove copy-assignment operator
@@ -35,7 +36,7 @@ public:
 	void AddTextureSRV(std::string textureName, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> textureSRV);
 	void AddSampler(std::string samplerName, Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler);
 
-	void PrepareMaterial();
+	void PrepareMaterial(Camera* cameraPtr);
 
 
 private:
@@ -43,6 +44,7 @@ private:
 	DirectX::XMFLOAT4 colorTint;
 	DirectX::XMFLOAT2 uvScale;
 	DirectX::XMFLOAT2 uvOffset;
+	float roughness;
 	std::shared_ptr<SimpleVertexShader> simpleVertexShader;
 	std::shared_ptr<SimplePixelShader> simplePixelShader;
 	int materialType;
