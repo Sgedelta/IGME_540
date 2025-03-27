@@ -8,6 +8,7 @@
 #include "Entity.h"
 #include "Camera.h"
 #include "SimpleShader.h"
+#include "Lights.h"
 
 class Game
 {
@@ -51,12 +52,13 @@ private:
 	std::vector<std::shared_ptr<Material>> materials;
 
 
-
 	//ImGui data
 	float ImGui_bgColor[4];
 	float ImGui_colorTint[4];
 	float ImGui_offset[3];
 	bool ImGui_Demo_Show = false;
 	std::vector<float> entityData;
+	std::vector<Light> lights;
+	DirectX::XMFLOAT3 ambientColor;
 };
 

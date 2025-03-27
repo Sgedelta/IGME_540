@@ -8,6 +8,7 @@
 #include "BufferStructs.h"
 #include "SimpleShader.h"
 #include "Material.h"
+#include "Lights.h"
 #include <memory>
 #include <iostream>
 #include <format>
@@ -40,7 +41,7 @@ void Game::Initialize()
 	CreateShaderToEntity();
 	CreateCameras();
 
-	
+	ambientColor = XMFLOAT3(ImGui_bgColor[0] * 0.2f, ImGui_bgColor[1] * 0.2f, ImGui_bgColor[2] * 0.2f);
 
 
 	// Set initial graphics API state
@@ -54,6 +55,39 @@ void Game::Initialize()
 		Graphics::Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	}
+
+	//create lights
+	lights.push_back({});
+	lights[0].Type = LIGHT_TYPE_DIRECTIONAL;
+	lights[0].Direction = XMFLOAT3(1, -1, 0);
+	lights[0].Color = XMFLOAT3(0.3f, 1, 0.3f);
+	lights[0].Intensity = 1;
+
+	lights.push_back({});
+	lights[1].Type = LIGHT_TYPE_DIRECTIONAL;
+	lights[1].Direction = XMFLOAT3(-1, 0, 1);
+	lights[1].Color = XMFLOAT3(1, 0, 0.3f);
+	lights[1].Intensity = 1;
+
+	lights.push_back({});
+	lights[2].Type = LIGHT_TYPE_DIRECTIONAL;
+	lights[2].Direction = XMFLOAT3(0.5f, -1, 0.5f);
+	lights[2].Color = XMFLOAT3(1, 1, 0.3f);
+	lights[2].Intensity = 1;
+
+	lights.push_back({});
+	lights[3].Type = LIGHT_TYPE_DIRECTIONAL;
+	lights[3].Direction = XMFLOAT3(-1, 1, 1);
+	lights[3].Color = XMFLOAT3(1, 1, 1);
+	lights[3].Intensity = 1;
+
+	lights.push_back({});
+	lights[4].Type = LIGHT_TYPE_DIRECTIONAL;
+	lights[4].Direction = XMFLOAT3(-1, 1, 0);
+	lights[4].Color = XMFLOAT3(1, 1, 1);
+	lights[4].Intensity = 1;
+
+
 
 	//Initialize ImGui and Platform/Renderer Backends
 	IMGUI_CHECKVERSION();
@@ -237,10 +271,10 @@ void Game::CreateShaderToEntity()
 	//make materials:
 	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1, 0.0f)); 
 	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1, 0.0f));
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1, 0.5f));
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1, 0.35f));
 	materials[2]->SetUVOffset(XMFLOAT2(2, 1));
 	materials[2]->SetUVScale(XMFLOAT2(5, 5));
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1, 0.5f)); 
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1, 0.35f)); 
 	materials.push_back(std::make_shared<Material>(XMFLOAT4(.2, 1, .5, 1), vs, ps, 1, 1.0f));
 	materials[4]->SetUVOffset(XMFLOAT2(2, 1));
 	materials[4]->SetUVScale(XMFLOAT2(5, 5));
@@ -374,7 +408,10 @@ void Game::Draw(float deltaTime, float totalTime)
 	//Draw entities
 	for (int i = 0; i < entityPtrs.size(); ++i) {
 		if (cameraIndex < cameraPtrs.size()) {
+			entityPtrs[i].get()->GetMaterial()->GetPixelShader()->SetFloat3("ambient", ambientColor);
 			entityPtrs[i].get()->Draw(ImGui_colorTint, cameraPtrs[cameraIndex].get());
+			entityPtrs[i].get()->GetMaterial()->GetPixelShader()->SetData("lights", &lights[0], sizeof(Light) * (int)lights.size());
+			entityPtrs[i].get()->GetMaterial()->GetPixelShader()->SetInt("lightCount", lights.size());
 		}
 	}
 
@@ -485,6 +522,7 @@ void Game::BuildUI() {
 	ImGui::Begin("Mesh Information");
 	ImGui::SeparatorText("Tint Scene: ");
 	ImGui::DragFloat4("color tint", &ImGui_colorTint[0], 0.01f, 0.0f, 1.0f);
+	ambientColor = XMFLOAT3(ImGui_bgColor[0], ImGui_bgColor[1], ImGui_bgColor[2]);
 
 	ImGui::SeparatorText("Meshes and Entities:");
 

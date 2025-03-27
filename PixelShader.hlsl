@@ -13,6 +13,9 @@ cbuffer ExternalData : register(b0)
     float2 uvOffset;
     float3 cameraPos;
     float roughness;
+    float3 ambient;
+    Light lights[MAX_LIGHT_COUNT];
+    int lightCount;
 }
 
 // --------------------------------------------------------
@@ -26,6 +29,34 @@ cbuffer ExternalData : register(b0)
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
+    input.normal = normalize(input.normal);
+    
+    float specExp = (1.0f - roughness) * MAX_SPECULAR_EXPONENT;
+
+    float3 V = normalize(cameraPos - input.worldPosition);
+
     float4 sampleColor = SurfaceTexture.Sample(BasicSampler, input.uv * uvScale + uvOffset);
-    return float4(colorTint.x * sampleColor.x, colorTint.y * sampleColor.y, colorTint.z * sampleColor.z, colorTint.w * sampleColor.w);
+
+    float3 c = float3(0, 0, 0);
+    for (int i = 0; i < lightCount; ++i) {
+        switch (lights[i].Type) {
+        case LIGHT_TYPE_DIRECTIONAL:
+            float3 specularColor = 0;
+            if (specExp != 0) { 
+                specularColor = SpecularHighlight(lights[i], specExp, input.normal, V);
+            }
+            c += DiffuseColor(lights[i], input.normal, sampleColor * colorTint) + specularColor;
+            break;
+        case LIGHT_TYPE_POINT:
+
+            break;
+        case LIGHT_TYPE_SPOT:
+
+            break;
+        }
+    }
+
+    return float4(c + ambient * sampleColor, 1);
+
+    return float4(colorTint.x * sampleColor.x * ambient.x, colorTint.y * sampleColor.y * ambient.y, colorTint.z * sampleColor.z * ambient.z, colorTint.w * sampleColor.w);
 }
