@@ -38,25 +38,23 @@ float4 main(VertexToPixel input) : SV_TARGET
     float4 sampleColor = SurfaceTexture.Sample(BasicSampler, input.uv * uvScale + uvOffset);
 
     float3 c = float3(0, 0, 0);
+
     for (int i = 0; i < lightCount; ++i) {
         switch (lights[i].Type) {
         case LIGHT_TYPE_DIRECTIONAL:
-            float3 specularColor = 0;
-            if (specExp != 0) { 
-                specularColor = SpecularHighlight(lights[i], specExp, input.normal, V);
-            }
-            c += DiffuseColor(lights[i], input.normal, sampleColor * colorTint) + specularColor;
+                c += DirectionalLight(lights[i], input.normal, (float3)sampleColor, V, specExp);
             break;
         case LIGHT_TYPE_POINT:
-
+                c += PointLight(lights[i], input.normal, (float3)sampleColor, V, input.worldPosition, specExp);
             break;
         case LIGHT_TYPE_SPOT:
-
+                c += SpotLight(lights[i], input.normal, (float3) sampleColor, V, input.worldPosition, specExp);
             break;
         }
+
     }
 
-    return float4(c + ambient * sampleColor, 1);
+    return float4(c + ambient * (float3) sampleColor, 1);
 
     return float4(colorTint.x * sampleColor.x * ambient.x, colorTint.y * sampleColor.y * ambient.y, colorTint.z * sampleColor.z * ambient.z, colorTint.w * sampleColor.w);
 }

@@ -60,32 +60,44 @@ void Game::Initialize()
 	lights.push_back({});
 	lights[0].Type = LIGHT_TYPE_DIRECTIONAL;
 	lights[0].Direction = XMFLOAT3(1, -1, 0);
-	lights[0].Color = XMFLOAT3(0.3f, 1, 0.3f);
+	lights[0].Color = XMFLOAT3(0, 1, 0.3f);
 	lights[0].Intensity = 1;
 
 	lights.push_back({});
 	lights[1].Type = LIGHT_TYPE_DIRECTIONAL;
 	lights[1].Direction = XMFLOAT3(-1, 0, 1);
-	lights[1].Color = XMFLOAT3(1, 0, 0.3f);
+	lights[1].Color = XMFLOAT3(0, 0, 1);
 	lights[1].Intensity = 1;
 
 	lights.push_back({});
 	lights[2].Type = LIGHT_TYPE_DIRECTIONAL;
 	lights[2].Direction = XMFLOAT3(0.5f, -1, 0.5f);
-	lights[2].Color = XMFLOAT3(1, 1, 0.3f);
+	lights[2].Color = XMFLOAT3(0, 1, 1);
 	lights[2].Intensity = 1;
 
 	lights.push_back({});
-	lights[3].Type = LIGHT_TYPE_DIRECTIONAL;
-	lights[3].Direction = XMFLOAT3(-1, 1, 1);
-	lights[3].Color = XMFLOAT3(1, 1, 1);
+	lights[3].Type = LIGHT_TYPE_POINT;
+	lights[3].Position = XMFLOAT3(1, 1, 1);
+	lights[3].Color = XMFLOAT3(1, 0, 1);
 	lights[3].Intensity = 1;
+	lights[3].Range = 10;
 
 	lights.push_back({});
-	lights[4].Type = LIGHT_TYPE_DIRECTIONAL;
-	lights[4].Direction = XMFLOAT3(-1, 1, 0);
-	lights[4].Color = XMFLOAT3(1, 1, 1);
+	lights[4].Type = LIGHT_TYPE_POINT;
+	lights[4].Position = XMFLOAT3(-1, 1, -1);
+	lights[4].Color = XMFLOAT3(1, 1, 0);
 	lights[4].Intensity = 1;
+	lights[4].Range = 10;
+
+	lights.push_back({});
+	lights[4].Type = LIGHT_TYPE_SPOT;
+	lights[4].Position = XMFLOAT3(2, 5, 0);
+	lights[4].Direction = XMFLOAT3(0, -1, 0);
+	lights[4].Color = XMFLOAT3(1, 1, 0);
+	lights[4].Intensity = 1;
+	lights[4].Range = 10;
+	lights[4].SpotInnerAngle = 20;
+	lights[4].SpotOuterAngle = 30;
 
 
 
@@ -604,6 +616,17 @@ void Game::BuildUI() {
 			cameraIndex %= cameraPtrs.size();
 			printf("%d", cameraIndex);
 		}
+	ImGui::End();
+
+	ImGui::Begin("Lights");
+	if (ImGui::CollapsingHeader("Light Information")) {
+		for (int i = 0; i < lights.size()-1; ++i) {
+			float color[3]{ lights[i].Color.x, lights[i].Color.y, lights[i].Color.z };
+			ImGui::DragFloat3(std::format("Color of Light {}", i).c_str(), color, 0.01f, 0.0f, 1.0f);
+			lights[i].Color = XMFLOAT3(color[0], color[1], color[2]);
+
+		}
+	}
 	ImGui::End();
 
 }

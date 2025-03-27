@@ -40,14 +40,33 @@ struct Light
     float2 Padding; //purposefully padding out 16 Byte Boundary
 };
 
-float3 DirectionToLight(Light light)
+float3 DirectionToLight(Light light, float3 worldPos)
 {
-    return normalize(-light.Direction);
+    switch (light.Type)
+    {
+        case LIGHT_TYPE_DIRECTIONAL:
+            return normalize(-light.Direction);
+            break;
+        
+        case LIGHT_TYPE_POINT:
+        case LIGHT_TYPE_SPOT:
+            return normalize(light.Position - worldPos);
+            break;
+    }
+    return float3(0, 0, 0);
+}
+
+float3 DiffuseColor(Light light, float3 normal, float3 surfaceTint, float3 samplePos)
+{
+    
+    return saturate(dot(normal, DirectionToLight(light, samplePos))) * light.Color * surfaceTint * light.Intensity;
+
 }
 
 float3 DiffuseColor(Light light, float3 normal, float3 surfaceTint)
 {
-    return saturate(dot(normal, DirectionToLight(light))) * light.Color * surfaceTint * light.Intensity;
+    
+    return DiffuseColor(light, normal, surfaceTint, float3(0, 0, 0));
 
 }
 
@@ -61,11 +80,58 @@ float3 SpecularHighlight(Light light, float specExp, float3 normal, float3 V)
 
 }
 
-float DirectionalLight(Light light, float3 normal, float3 surface, float3 V, float specExp)
+float PointAttenuate(Light light, float3 worldPos)
 {
-    return DiffuseColor(light, normal, surface) + SpecularHighlight(light, specExp, normal, V);
+    float dist = distance(light.Position, worldPos);
+    float att = saturate(1.0f - (dist * dist / (light.Range * light.Range)));
+    return att * att;
 }
 
+float SpotAttenuate(Light light, float3 worldPos)
+{
+    float pixelAngle = saturate(dot(worldPos - light.Position, light.Direction));
+    
+    float cosOuter = cos(light.SpotOuterAngle);
+    float cosInner = cos(light.SpotInnerAngle);
+    float falloffRange = cosOuter - cosInner;
+    
+    float spotTerm = saturate((cosOuter - pixelAngle) / falloffRange);
+    return spotTerm * PointAttenuate(light, worldPos);
+}
+
+float3 DirectionalLight(Light light, float3 normal, float3 surface, float3 V, float specExp)
+{
+    float3 specularColor = float3(0, 0, 0);
+    if (specExp != 0)
+    {
+        specularColor = SpecularHighlight(light, specExp, normal, V);
+
+    }
+    return DiffuseColor(light, normal, surface) + specularColor;
+}
+
+float3 PointLight(Light light, float3 normal, float3 surface, float3 V, float3 samplePos, float specExp)
+{
+    float3 specularColor = float3(0, 0, 0);
+    if (specExp != 0)
+    {
+        specularColor = SpecularHighlight(light, specExp, normal, V);
+
+    }
+    return (DiffuseColor(light, normal, surface, samplePos) + specularColor) * PointAttenuate(light, samplePos);
+
+}
+
+float3 SpotLight(Light light, float3 normal, float3 surface, float3 V, float3 samplePos, float specExp)
+{
+    float3 specularColor = float3(0, 0, 0);
+    if (specExp != 0)
+    {
+        specularColor = SpecularHighlight(light, specExp, normal, V);
+
+    }
+    return (DiffuseColor(light, normal, surface, samplePos) + specularColor) * SpotAttenuate(light, samplePos);
+}
 
 
 #endif
