@@ -2,6 +2,8 @@
 
 //texture and sampler buffers
 Texture2D SurfaceTexture : register(t0); // "t" registers for textures
+Texture2D NormalTexture : register(t1);
+
 SamplerState BasicSampler : register(s0); // "s" registers for samplers
 
 
@@ -29,7 +31,19 @@ cbuffer ExternalData : register(b0)
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
-    input.normal = normalize(input.normal);
+    
+    //unpack normal:
+    float3 unpackedNormal = NormalTexture.Sample(BasicSampler, input.uv).rgb * 2 - 1;
+    unpackedNormal = normalize(unpackedNormal);
+    
+    float3 N = normalize(input.normal); // normalized here (or before, if needed) because it may have become unnormalized before
+    float3 T = normalize(input.tangent); // as above
+    T = normalize(T - N * dot(T, N)); // ENSURING normalization and orthogonalness
+    float3 B = cross(T, N);
+    float3x3 TBN = float3x3(T, B, N); // A Rotational matrix that is local space for the pixel
+    
+    input.normal = mul(unpackedNormal, TBN); // update the normal we actually use later to be the unpacked normal and the local space
+    
     
     float specExp = (1.0f - roughness) * MAX_SPECULAR_EXPONENT;
 

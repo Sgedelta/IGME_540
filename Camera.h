@@ -30,7 +30,7 @@ private:
 	float nearClip = .01f;
 	float farClip = 500;
 	float moveSpeed = 1;
-	float mouseLookSpeed = .02f; 
+	float mouseLookSpeed = .01f; 
 	bool isPerspective = true;
 
 	void UpdateViewMatrix();

@@ -9,6 +9,7 @@
 #include "Camera.h"
 #include "SimpleShader.h"
 #include "Lights.h"
+#include "Sky.h"
 
 class Game
 {
@@ -50,6 +51,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> indexBuffer;
 
 	std::vector<std::shared_ptr<Material>> materials;
+	std::shared_ptr<Sky> sky;
 
 
 	//ImGui data

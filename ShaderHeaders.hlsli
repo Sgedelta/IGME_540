@@ -25,6 +25,14 @@ struct VertexToPixel
     float2 uv : TEXTCOORD;
     float3 normal : NORMAL;
     float3 worldPosition : POSITION;
+    float3 tangent : TANGENT;
+};
+
+//vertex to pixel for sky shaders SPECIFICALLY
+struct VertexToPixelSky
+{
+    float4 position : SV_POSITION;
+    float3 sampleDir : DIRECTION;
 };
 
 struct Light

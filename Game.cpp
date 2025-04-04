@@ -112,10 +112,10 @@ void Game::Initialize()
 
 
 	//ImGui inital data:
-	ImGui_bgColor[0] = 0.4f;
-	ImGui_bgColor[1] = 0.6f;
-	ImGui_bgColor[2] = 0.75f;
-	ImGui_bgColor[3] = 0.0f;
+	ImGui_bgColor[0] = 0.058f;
+	ImGui_bgColor[1] = 0.058f;
+	ImGui_bgColor[2] = 0.196f;
+	ImGui_bgColor[3] = 1.0f;
 
 	ImGui_offset[0] = 0.0f;
 	ImGui_offset[1] = 0.0f;
@@ -241,13 +241,23 @@ void Game::CreateShaderToEntity()
 
 
 	//load textures
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> grayRocksText;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> mossyBrickText;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> REDACTEDText;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobbleText;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobbleNormal;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cushionText;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cushionNormal;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockText;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockNormal;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> flatNormal;
 
-	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/gray_rocks_diff_4K.jpg").c_str(), nullptr, &grayRocksText);
-	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/mossy_brick_diff_4K.jpg").c_str(), nullptr, &mossyBrickText);
-	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/REDACTED.png").c_str(), nullptr, &REDACTEDText);
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/cobblestone.png").c_str(), nullptr, &cobbleText);
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/cobblestone_normals.png").c_str(), nullptr, &cobbleNormal);
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/cushion.png").c_str(), nullptr, &cushionText);
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/cushion_normals.png").c_str(), nullptr, &cushionNormal);
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/rock.png").c_str(), nullptr, &rockText);
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/rock_normals.png").c_str(), nullptr, &rockNormal);
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/flat_normals.png").c_str(), nullptr, &flatNormal);
+
+
 
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState;
 
@@ -281,24 +291,29 @@ void Game::CreateShaderToEntity()
 		Graphics::Device, Graphics::Context, FixPath(L"TwoTextureShader.cso").c_str());
 
 	//make materials:
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1, 0.0f)); 
 	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1, 0.0f));
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1, 0.35f));
-	materials[2]->SetUVOffset(XMFLOAT2(2, 1));
-	materials[2]->SetUVScale(XMFLOAT2(5, 5));
-	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1, 0.35f)); 
+	materials[0]->SetUVOffset(XMFLOAT2(2, 1));
+	materials[0]->SetUVScale(XMFLOAT2(5, 5));
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1, 0.0f));
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1, 0.0f));
+
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1, 0.55f));
+	materials[3]->SetUVOffset(XMFLOAT2(2, 1));
+	materials[3]->SetUVScale(XMFLOAT2(5, 5));
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1, 0.55f)); 
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1, 0.55f));
+
 	materials.push_back(std::make_shared<Material>(XMFLOAT4(.2, 1, .5, 1), vs, ps, 1, 1.0f));
-	materials[4]->SetUVOffset(XMFLOAT2(2, 1));
-	materials[4]->SetUVScale(XMFLOAT2(5, 5));
+	materials[6]->SetUVOffset(XMFLOAT2(2, 1));
+	materials[6]->SetUVScale(XMFLOAT2(5, 5));
+	materials.push_back(std::make_shared<Material>(XMFLOAT4(.8, 1, .3, 1), vs, ps, 1, 1.0f));
 	materials.push_back(std::make_shared<Material>(XMFLOAT4(.8, 1, .3, 1), vs, ps, 1, 1.0f));
 
 
-
+	//set material textures
 	for (int i = 0; i < materials.size(); ++i) {
-		materials[i]->AddTextureSRV("SurfaceTexture", (i>=3) ? grayRocksText : mossyBrickText);
-		if (i % 3 == 2) {
-			materials[i]->AddTextureSRV("SurfaceTexture2", REDACTEDText);
-		}
+		materials[i]->AddTextureSRV("SurfaceTexture", (i%3 == 0) ? cobbleText : ((i % 3 == 1) ? cushionText : rockText));
+		materials[i]->AddTextureSRV("NormalTexture", (i % 3 == 0) ? cobbleNormal : ((i % 3 == 1) ? cushionNormal : rockNormal));
 		materials[i]->AddSampler("BasicSampler", samplerState);
 	}
 
@@ -336,6 +351,28 @@ void Game::CreateShaderToEntity()
 			
 		}
 	}
+
+	// load sky:
+
+	std::shared_ptr<SimpleVertexShader> skyVs = std::make_shared<SimpleVertexShader>(
+		Graphics::Device, Graphics::Context, FixPath(L"SkyVertexShader.cso").c_str());
+	std::shared_ptr<SimplePixelShader> skyPs = std::make_shared<SimplePixelShader>(
+		Graphics::Device, Graphics::Context, FixPath(L"SkyPixelShader.cso").c_str());
+
+	sky = std::make_shared<Sky>(
+		meshPtrs[0], //cube mesh
+		samplerState,
+		skyVs,
+		skyPs,
+		FixPath(L"../../Assets/Images/Planet/right.png").c_str(),
+		FixPath(L"../../Assets/Images/Planet/left.png").c_str(),
+		FixPath(L"../../Assets/Images/Planet/up.png").c_str(),
+		FixPath(L"../../Assets/Images/Planet/down.png").c_str(),
+		FixPath(L"../../Assets/Images/Planet/front.png").c_str(),
+		FixPath(L"../../Assets/Images/Planet/back.png").c_str()
+	);
+
+
 }
 
 
@@ -426,6 +463,9 @@ void Game::Draw(float deltaTime, float totalTime)
 			entityPtrs[i].get()->GetMaterial()->GetPixelShader()->SetInt("lightCount", lights.size());
 		}
 	}
+
+	//Draw Skybox
+	sky->Draw(cameraPtrs[cameraIndex].get());
 
 	//Last thing to draw: ImGui!
 	ImGui::Render();
