@@ -1,8 +1,10 @@
 #include "ShaderHeaders.hlsli"
 
 //texture and sampler buffers
-Texture2D SurfaceTexture : register(t0); // "t" registers for textures
-Texture2D NormalTexture : register(t1);
+Texture2D Albedo : register(t0); // "t" registers for textures
+Texture2D NormalTexture : register(t1); //the normal map for our texture
+Texture2D RoughnessMap : register(t2);
+Texture2D MetalnessMap : register(t3);
 
 SamplerState BasicSampler : register(s0); // "s" registers for samplers
 
@@ -32,8 +34,10 @@ cbuffer ExternalData : register(b0)
 float4 main(VertexToPixel input) : SV_TARGET
 {
     
+    float2 adjustedUv = input.uv * uvScale + uvOffset;
+    
     //unpack normal:
-    float3 unpackedNormal = NormalTexture.Sample(BasicSampler, input.uv).rgb * 2 - 1;
+    float3 unpackedNormal = NormalTexture.Sample(BasicSampler, adjustedUv).rgb * 2 - 1;
     unpackedNormal = normalize(unpackedNormal);
     
     float3 N = normalize(input.normal); // normalized here (or before, if needed) because it may have become unnormalized before
@@ -44,31 +48,39 @@ float4 main(VertexToPixel input) : SV_TARGET
     
     input.normal = mul(unpackedNormal, TBN); // update the normal we actually use later to be the unpacked normal and the local space
     
-    
     float specExp = (1.0f - roughness) * MAX_SPECULAR_EXPONENT;
 
     float3 V = normalize(cameraPos - input.worldPosition);
 
-    float4 sampleColor = SurfaceTexture.Sample(BasicSampler, input.uv * uvScale + uvOffset);
+    float4 sampleColor = pow(Albedo.Sample(BasicSampler, adjustedUv), 2.2f);
+    float roughness = RoughnessMap.Sample(BasicSampler, adjustedUv).r;
+    float metalness = MetalnessMap.Sample(BasicSampler, adjustedUv).r;
+    
+    // Specular color determination -----------------
+    // Assume albedo texture is actually holding specular color where metalness == 1
+    // Note the use of lerp here - metal is generally 0 or 1, but might be in between
+    // because of linear texture sampling, so we lerp the specular color to match
+    float3 specularColor = lerp(F0_NON_METAL, sampleColor.rgb, metalness); 
 
     float3 c = float3(0, 0, 0);
 
     for (int i = 0; i < lightCount; ++i) {
         switch (lights[i].Type) {
         case LIGHT_TYPE_DIRECTIONAL:
-                c += DirectionalLight(lights[i], input.normal, (float3)sampleColor, V, specExp);
+                c += DirectionalLight(lights[i], input.normal, (float3) sampleColor, V, specularColor, roughness, metalness);
             break;
         case LIGHT_TYPE_POINT:
-                c += PointLight(lights[i], input.normal, (float3)sampleColor, V, input.worldPosition, specExp);
+                c += PointLight(lights[i], input.normal, (float3) sampleColor, V, input.worldPosition, specularColor, roughness, metalness);
             break;
         case LIGHT_TYPE_SPOT:
-                c += SpotLight(lights[i], input.normal, (float3) sampleColor, V, input.worldPosition, specExp);
+                c += SpotLight(lights[i], input.normal, (float3) sampleColor, V, input.worldPosition, specularColor, roughness, metalness);
             break;
-        }
+        } 
 
     }
+    
+    float3 totalColor = c + (float3) sampleColor;
 
-    return float4(c + ambient * (float3) sampleColor, 1);
+    return float4(pow(totalColor, 1.0f / 2.2f), 1);
 
-    return float4(colorTint.x * sampleColor.x * ambient.x, colorTint.y * sampleColor.y * ambient.y, colorTint.z * sampleColor.z * ambient.z, colorTint.w * sampleColor.w);
 }

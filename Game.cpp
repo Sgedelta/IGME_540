@@ -241,20 +241,35 @@ void Game::CreateShaderToEntity()
 
 
 	//load textures
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobbleText;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobbleAlbedo;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobbleNormal;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cushionText;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cushionNormal;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockText;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockNormal;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobbleMetal;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> cobbleRough;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> bronzeAlbedo;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> bronzeNormal;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> bronzeMetal;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> bronzeRough;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> paintAlbedo;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> paintNormal;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> paintMetal;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> paintRough;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> flatNormal;
 
-	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/cobblestone.png").c_str(), nullptr, &cobbleText);
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/cobblestone_albedo.png").c_str(), nullptr, &cobbleAlbedo);
 	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/cobblestone_normals.png").c_str(), nullptr, &cobbleNormal);
-	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/cushion.png").c_str(), nullptr, &cushionText);
-	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/cushion_normals.png").c_str(), nullptr, &cushionNormal);
-	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/rock.png").c_str(), nullptr, &rockText);
-	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/rock_normals.png").c_str(), nullptr, &rockNormal);
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/cobblestone_metal.png").c_str(), nullptr, &cobbleMetal);
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/cobblestone_roughness.png").c_str(), nullptr, &cobbleRough);
+
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/bronze_albedo.png").c_str(), nullptr, &bronzeAlbedo);
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/bronze_normals.png").c_str(), nullptr, &bronzeNormal);
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/bronze_metal.png").c_str(), nullptr, &bronzeMetal);
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/bronze_roughness.png").c_str(), nullptr, &bronzeRough);
+
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/paint_albedo.png").c_str(), nullptr, &paintAlbedo);
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/paint_normals.png").c_str(), nullptr, &paintNormal);
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/paint_metal.png").c_str(), nullptr, &paintMetal);
+	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/paint_roughness.png").c_str(), nullptr, &paintRough);
+
 	CreateWICTextureFromFile(Graphics::Device.Get(), Graphics::Context.Get(), FixPath(L"../../Assets/Images/flat_normals.png").c_str(), nullptr, &flatNormal);
 
 
@@ -312,8 +327,10 @@ void Game::CreateShaderToEntity()
 
 	//set material textures
 	for (int i = 0; i < materials.size(); ++i) {
-		materials[i]->AddTextureSRV("SurfaceTexture", (i%3 == 0) ? cobbleText : ((i % 3 == 1) ? cushionText : rockText));
-		materials[i]->AddTextureSRV("NormalTexture", (i % 3 == 0) ? cobbleNormal : ((i % 3 == 1) ? cushionNormal : rockNormal));
+		materials[i]->AddTextureSRV("Albedo", (i % 3 == 0) ? cobbleAlbedo : ((i % 3 == 1) ? bronzeAlbedo : paintAlbedo));
+		materials[i]->AddTextureSRV("NormalTexture", (i % 3 == 0) ? cobbleNormal : ((i % 3 == 1) ? bronzeNormal : paintNormal));
+		materials[i]->AddTextureSRV("RoughnessMap", (i % 3 == 0) ? cobbleRough : ((i % 3 == 1) ? bronzeRough : paintRough));
+		materials[i]->AddTextureSRV("MetalnessMap", (i % 3 == 0) ? cobbleMetal : ((i % 3 == 1) ? bronzeMetal : paintMetal));
 		materials[i]->AddSampler("BasicSampler", samplerState);
 	}
 
