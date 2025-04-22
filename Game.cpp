@@ -58,47 +58,64 @@ void Game::Initialize()
 
 	//create lights
 	lights.push_back({});
-	lights[0].Type = LIGHT_TYPE_DIRECTIONAL;
-	lights[0].Direction = XMFLOAT3(1, -1, 0);
-	lights[0].Color = XMFLOAT3(0, 1, 0.3f);
-	lights[0].Intensity = 1;
+	lights[lights.size()-1].Type = LIGHT_TYPE_DIRECTIONAL;
+	lights[lights.size()-1].Direction = XMFLOAT3(1, -1, 0);
+	lights[lights.size()-1].Color = XMFLOAT3(0, 1, 0.3f);
+	lights[lights.size()-1].Intensity = 1;
 
 	lights.push_back({});
-	lights[1].Type = LIGHT_TYPE_DIRECTIONAL;
-	lights[1].Direction = XMFLOAT3(-1, 0, 1);
-	lights[1].Color = XMFLOAT3(0, 0, 1);
-	lights[1].Intensity = 1;
+	lights[lights.size()-1].Type = LIGHT_TYPE_DIRECTIONAL;
+	lights[lights.size()-1].Direction = XMFLOAT3(-1, -0.2f, 1);
+	lights[lights.size()-1].Color = XMFLOAT3(0, 0, 1);
+	lights[lights.size()-1].Intensity = 2;
 
 	lights.push_back({});
-	lights[2].Type = LIGHT_TYPE_DIRECTIONAL;
-	lights[2].Direction = XMFLOAT3(0.5f, -1, 0.5f);
-	lights[2].Color = XMFLOAT3(0, 1, 1);
-	lights[2].Intensity = 1;
+	lights[lights.size()-1].Type = LIGHT_TYPE_DIRECTIONAL;
+	lights[lights.size()-1].Direction = XMFLOAT3(0.5f, -1, 0.5f);
+	lights[lights.size()-1].Color = XMFLOAT3(0, 1, 1);
+	lights[lights.size()-1].Intensity = 1;
 
 	lights.push_back({});
-	lights[3].Type = LIGHT_TYPE_POINT;
-	lights[3].Position = XMFLOAT3(1, 1, 1);
-	lights[3].Color = XMFLOAT3(1, 0, 1);
-	lights[3].Intensity = 1;
-	lights[3].Range = 10;
+	lights[lights.size() - 1].Type = LIGHT_TYPE_POINT;
+	lights[lights.size() - 1].Position = XMFLOAT3(1, 1, 1);
+	lights[lights.size() - 1].Color = XMFLOAT3(1, 0, 1);
+	lights[lights.size() - 1].Intensity = 1;
+	lights[lights.size() - 1].Range = 10;
 
 	lights.push_back({});
-	lights[4].Type = LIGHT_TYPE_POINT;
-	lights[4].Position = XMFLOAT3(-1, 1, -1);
-	lights[4].Color = XMFLOAT3(1, 1, 0);
-	lights[4].Intensity = 1;
-	lights[4].Range = 10;
+	lights[lights.size() - 1].Type = LIGHT_TYPE_POINT;
+	lights[lights.size() - 1].Position = XMFLOAT3(5, 3, 10);
+	lights[lights.size() - 1].Color = XMFLOAT3(1, 1, 1);
+	lights[lights.size() - 1].Intensity = 2;
+	lights[lights.size() - 1].Range = 20;
 
 	lights.push_back({});
-	lights[4].Type = LIGHT_TYPE_SPOT;
-	lights[4].Position = XMFLOAT3(2, 5, 0);
-	lights[4].Direction = XMFLOAT3(0, -1, 0);
-	lights[4].Color = XMFLOAT3(1, 1, 0);
-	lights[4].Intensity = 1;
-	lights[4].Range = 10;
-	lights[4].SpotInnerAngle = 20;
-	lights[4].SpotOuterAngle = 30;
+	lights[lights.size() - 1].Type = LIGHT_TYPE_POINT;
+	lights[lights.size() - 1].Position = XMFLOAT3(-1,-1, 1);
+	lights[lights.size() - 1].Color = XMFLOAT3(1, 1, 0);
+	lights[lights.size() - 1].Intensity = 1;
+	lights[lights.size() - 1].Range = 10;
 
+	lights.push_back({});
+	lights[lights.size() - 1].Type = LIGHT_TYPE_SPOT;
+	lights[lights.size() - 1].Position = XMFLOAT3(2, 5, 0);
+	lights[lights.size() - 1].Direction = XMFLOAT3(0, -1, 0);
+	lights[lights.size() - 1].Color = XMFLOAT3(1, 1, 0);
+	lights[lights.size() - 1].Intensity = 3;
+	lights[lights.size() - 1].Range = 10;
+	lights[lights.size() - 1].SpotInnerAngle = 20;
+	lights[lights.size() - 1].SpotOuterAngle = 30;
+	
+	lights.push_back({});
+	lights[lights.size() - 1].Type = LIGHT_TYPE_SPOT;
+	lights[lights.size() - 1].Position = XMFLOAT3(2, -5, 0);
+	lights[lights.size() - 1].Direction = XMFLOAT3(0, 1, 0);
+	lights[lights.size() - 1].Color = XMFLOAT3(1, 1, 1);
+	lights[lights.size() - 1].Intensity = 5;
+	lights[lights.size() - 1].Range = 10;
+	lights[lights.size() - 1].SpotInnerAngle = 20;
+	lights[lights.size() - 1].SpotOuterAngle = 30;
+	
 
 
 	//Initialize ImGui and Platform/Renderer Backends
@@ -349,9 +366,9 @@ void Game::CreateShaderToEntity()
 			entityPtrs.push_back(std::make_shared<Entity>(meshPtrs[j], materials[i]));
 			
 			//position:
-			entityData.push_back(j * 2.5f); //x
-			entityData.push_back(i * 3.0f); //y
-			entityData.push_back(0); //z
+			entityData.push_back(j * 3.5f); //x
+			entityData.push_back(0); //y
+			entityData.push_back((i - materials.size()/2.0f) * 3.5f); //z
 
 			//rotation:
 			entityData.push_back(0);
@@ -364,10 +381,18 @@ void Game::CreateShaderToEntity()
 			entityData.push_back(1);
 
 			//set position and stuff:
-			entityPtrs[meshPtrs.size() * i + j].get()->GetTransform()->SetPosition(j * 2.5f, i*3.0f, 0);
+			entityPtrs[meshPtrs.size() * i + j].get()->GetTransform()->SetPosition(j * 3.5f, 0, (i - materials.size() / 2.0f) * 3.5f);
 			
 		}
 	}
+	//make floor entity
+	entityPtrs.push_back(std::make_shared<Entity>(meshPtrs[0], materials[0]));
+	entityData.push_back(0); entityData.push_back(-2.0f); entityData.push_back(0);
+	entityData.push_back(0); entityData.push_back(0); entityData.push_back(0);
+	entityData.push_back(25); entityData.push_back(0.1f); entityData.push_back(25);
+	entityPtrs[entityPtrs.size() - 1].get()->GetTransform()->SetPosition(0, -2.0f, 0);
+	entityPtrs[entityPtrs.size() - 1].get()->GetTransform()->SetScale(25, 0.1f, 25);
+
 
 	// load sky:
 
@@ -421,6 +446,11 @@ void Game::Update(float deltaTime, float totalTime)
 	//update Camera:
 	if (cameraIndex < cameraPtrs.size()) {
 		cameraPtrs[cameraIndex].get()->Update(deltaTime);
+	}
+
+	//update objects 
+	for (int i = 0; i < entityPtrs.size() - 1; ++i) { //-1 because floor should not rotate
+		entityPtrs[i].get()->GetTransform()->SetRotation(sin(totalTime + i), cos(totalTime + i), sin(totalTime + i) * cos(totalTime + i));
 	}
 
 	// Example input checking: Quit if the escape key is pressed
@@ -677,7 +707,7 @@ void Game::BuildUI() {
 
 	ImGui::Begin("Lights");
 	if (ImGui::CollapsingHeader("Light Information")) {
-		for (int i = 0; i < lights.size()-1; ++i) {
+		for (int i = 0; i < lights.size(); ++i) {
 			float color[3]{ lights[i].Color.x, lights[i].Color.y, lights[i].Color.z };
 			ImGui::DragFloat3(std::format("Color of Light {}", i).c_str(), color, 0.01f, 0.0f, 1.0f);
 			lights[i].Color = XMFLOAT3(color[0], color[1], color[2]);

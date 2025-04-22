@@ -240,9 +240,9 @@ float3 DirectionalLight(Light light, float3 normal, float3 surface, float3 V, fl
 
 float3 PointLight(Light light, float3 normal, float3 surface, float3 V, float3 samplePos, float3 specularColor, float roughness, float metalness)
 {
-    float diff = DiffusePBR(normal, light.Direction);
+    float diff = DiffusePBR(normal, light.Position - samplePos);
     float3 fresnel;
-    float3 spec = MicrofacetBRDF(normal, light.Direction, V, roughness, surface, fresnel);
+    float3 spec = MicrofacetBRDF(normal, light.Position - samplePos, V, roughness, surface, fresnel);
     
     //energy conserve:
     float3 balancedDiff = DiffuseEnergyConserve(diff, fresnel, metalness);
