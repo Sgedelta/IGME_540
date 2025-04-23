@@ -35,11 +35,6 @@ using namespace DirectX;
 // --------------------------------------------------------
 void Game::Initialize()
 {
-	// Helper methods for loading shaders, creating some basic
-	// geometry to draw and some simple camera matrices.
-	//  - You'll be expanding and/or replacing these later
-	CreateShaderToEntity();
-	CreateCameras();
 
 	ambientColor = XMFLOAT3(ImGui_bgColor[0] * 0.2f, ImGui_bgColor[1] * 0.2f, ImGui_bgColor[2] * 0.2f);
 
@@ -59,9 +54,9 @@ void Game::Initialize()
 	//create lights
 	lights.push_back({});
 	lights[lights.size()-1].Type = LIGHT_TYPE_DIRECTIONAL;
-	lights[lights.size()-1].Direction = XMFLOAT3(0, 1, 0);
+	lights[lights.size()-1].Direction = XMFLOAT3(0.5f, 1, 0.1f);
 	lights[lights.size()-1].Color = XMFLOAT3(0, 1, 0.3f);
-	lights[lights.size()-1].Intensity = 10;
+	lights[lights.size()-1].Intensity = 150;
 
 	lights.push_back({});
 	lights[lights.size()-1].Type = LIGHT_TYPE_DIRECTIONAL;
@@ -80,21 +75,21 @@ void Game::Initialize()
 	lights[lights.size() - 1].Position = XMFLOAT3(1, 1, 1);
 	lights[lights.size() - 1].Color = XMFLOAT3(1, 0, 1);
 	lights[lights.size() - 1].Intensity = 1;
-	lights[lights.size() - 1].Range = 10;
+	lights[lights.size() - 1].Range = 5;
 
 	lights.push_back({});
 	lights[lights.size() - 1].Type = LIGHT_TYPE_POINT;
 	lights[lights.size() - 1].Position = XMFLOAT3(5, 3, 10);
 	lights[lights.size() - 1].Color = XMFLOAT3(1, 1, 1);
 	lights[lights.size() - 1].Intensity = 2;
-	lights[lights.size() - 1].Range = 20;
+	lights[lights.size() - 1].Range = 15;
 
 	lights.push_back({});
 	lights[lights.size() - 1].Type = LIGHT_TYPE_POINT;
 	lights[lights.size() - 1].Position = XMFLOAT3(-1,-1, 1);
 	lights[lights.size() - 1].Color = XMFLOAT3(1, 1, 0);
 	lights[lights.size() - 1].Intensity = 1;
-	lights[lights.size() - 1].Range = 10;
+	lights[lights.size() - 1].Range = 5;
 
 	lights.push_back({});
 	lights[lights.size() - 1].Type = LIGHT_TYPE_SPOT;
@@ -102,7 +97,7 @@ void Game::Initialize()
 	lights[lights.size() - 1].Direction = XMFLOAT3(0, -1, 0);
 	lights[lights.size() - 1].Color = XMFLOAT3(1, 1, 0);
 	lights[lights.size() - 1].Intensity = 3;
-	lights[lights.size() - 1].Range = 10;
+	lights[lights.size() - 1].Range = 7;
 	lights[lights.size() - 1].SpotInnerAngle = 20;
 	lights[lights.size() - 1].SpotOuterAngle = 30;
 	
@@ -112,11 +107,15 @@ void Game::Initialize()
 	lights[lights.size() - 1].Direction = XMFLOAT3(0, 1, 0);
 	lights[lights.size() - 1].Color = XMFLOAT3(1, 1, 1);
 	lights[lights.size() - 1].Intensity = 5;
-	lights[lights.size() - 1].Range = 10;
+	lights[lights.size() - 1].Range = 7;
 	lights[lights.size() - 1].SpotInnerAngle = 20;
 	lights[lights.size() - 1].SpotOuterAngle = 30;
 
 	CreateShadowmapResources();
+
+	// Helper methods for loading
+	CreateShaderToEntity();
+	CreateCameras();
 	
 
 
@@ -353,6 +352,7 @@ void Game::CreateShaderToEntity()
 		materials[i]->AddTextureSRV("RoughnessMap", (i % 3 == 0) ? cobbleRough : ((i % 3 == 1) ? bronzeRough : paintRough));
 		materials[i]->AddTextureSRV("MetalnessMap", (i % 3 == 0) ? cobbleMetal : ((i % 3 == 1) ? bronzeMetal : paintMetal));
 		materials[i]->AddSampler("BasicSampler", samplerState);
+		materials[i]->AddSampler("ShadowSampler", shadowSampler);
 	}
 
 
@@ -518,9 +518,10 @@ void Game::Draw(float deltaTime, float totalTime)
 	Graphics::Context->RSSetViewports(1, &viewport);
 
 	shadowVS->SetShader();
-	shadowVS->SetMatrix4x4("view", lightViewMatrixList[1]);
-	shadowVS->SetMatrix4x4("projection", lightProjectionMatrixList[1]);
-	// Loop and draw all entities
+	shadowVS->SetMatrix4x4("view", lightViewMatrixList[0]);
+	shadowVS->SetMatrix4x4("projection", lightProjectionMatrixList[0]);
+	Graphics::Context->RSSetState(shadowRasterizer.Get());
+	// Loop and draw all entities to shadowMap
 	for (auto& e : entityPtrs)
 	{
 		shadowVS->SetMatrix4x4("world", e->GetTransform()->GetWorldMatrix());
@@ -539,19 +540,22 @@ void Game::Draw(float deltaTime, float totalTime)
 		Graphics::BackBufferRTV.GetAddressOf(),
 		Graphics::DepthBufferDSV.Get()
 	);
+	Graphics::Context->RSSetState(0);
 
 	//Draw entities
 	for (int i = 0; i < entityPtrs.size(); ++i) {
 		if (cameraIndex < cameraPtrs.size()) {
-			//bind our shaders:
 			entityPtrs[i].get()->GetMaterial()->BindMaterialShaders();
+			//send light/shadow info
 			entityPtrs[i].get()->GetMaterial()->AddTextureSRV("ShadowMap", shadowSRV.Get());
+			//entityPtrs[i].get()->GetMaterial()->GetPixelShader()->SetSamplerState("ShadowSampler", shadowSampler);
 			entityPtrs[i].get()->GetMaterial()->GetVertexShader()->SetMatrix4x4("lightView", lightViewMatrixList[0]);
 			entityPtrs[i].get()->GetMaterial()->GetVertexShader()->SetMatrix4x4("lightProjection", lightProjectionMatrixList[0]);
 			entityPtrs[i].get()->GetMaterial()->GetPixelShader()->SetFloat3("ambient", ambientColor);
-			entityPtrs[i].get()->Draw(ImGui_colorTint, cameraPtrs[cameraIndex].get());
 			entityPtrs[i].get()->GetMaterial()->GetPixelShader()->SetData("lights", &lights[0], sizeof(Light) * (int)lights.size());
 			entityPtrs[i].get()->GetMaterial()->GetPixelShader()->SetInt("lightCount", lights.size());
+			entityPtrs[i].get()->Draw(ImGui_colorTint, cameraPtrs[cameraIndex].get());
+
 		}
 	}
 
@@ -577,6 +581,10 @@ void Game::Draw(float deltaTime, float totalTime)
 			1,
 			Graphics::BackBufferRTV.GetAddressOf(),
 			Graphics::DepthBufferDSV.Get());
+
+		//same as above but with shadow map (resetting to avoid OMDepthStencil Warning)
+		ID3D11ShaderResourceView* nullSRVs[128] = {};
+		Graphics::Context->PSSetShaderResources(0, 128, nullSRVs);
 	}
 }
 
@@ -800,6 +808,26 @@ void Game::CreateShadowmapResources()
 		shadowTexture.Get(),
 		&srvDesc,
 		shadowSRV.GetAddressOf());
+
+	//create shadowRasterizer
+	D3D11_RASTERIZER_DESC shadowRastDesc = {};
+	shadowRastDesc.FillMode = D3D11_FILL_SOLID;
+	shadowRastDesc.CullMode = D3D11_CULL_BACK;
+	shadowRastDesc.DepthClipEnable = true;
+	shadowRastDesc.DepthBias = 1000; //NOT WORLD UNITS!
+	shadowRastDesc.SlopeScaledDepthBias = 1.0f; //bias more based on slope
+	Graphics::Device->CreateRasterizerState(&shadowRastDesc, &shadowRasterizer);
+
+	//create shadowSampler
+	D3D11_SAMPLER_DESC shadowSampDesc = {};
+	shadowSampDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+	shadowSampDesc.ComparisonFunc = D3D11_COMPARISON_LESS;
+	shadowSampDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+	shadowSampDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+	shadowSampDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
+	shadowSampDesc.BorderColor[0] = 1.0f; //we only need the first component, that's what the shader reads
+	Graphics::Device->CreateSamplerState(&shadowSampDesc, &shadowSampler);
+
 
 	for (int i = 0; i < lights.size(); ++i) {
 		switch (lights[i].Type) {

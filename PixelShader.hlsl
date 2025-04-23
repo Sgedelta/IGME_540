@@ -8,6 +8,7 @@ Texture2D MetalnessMap : register(t3);
 Texture2D ShadowMap : register(t4);
 
 SamplerState BasicSampler : register(s0); // "s" registers for samplers
+SamplerComparisonState ShadowSampler : register(s1);
 
 
 // Buffer
@@ -40,14 +41,9 @@ float4 main(VertexToPixel input) : SV_TARGET
     shadowUV.y = 1 - shadowUV.y; //flip y
     //distance to light
     float distToLight = input.shadowMapPos.z;
-    float distShadowMap = ShadowMap.Sample(BasicSampler, shadowUV).r;
-    //testing:
-    return float4(distShadowMap,0,0,1);
-    if (distShadowMap < distToLight)
-    {
-        return float4(0, 0, 0, 1.0f);
-    }
+    float shadowAmount = ShadowMap.SampleCmpLevelZero(ShadowSampler, shadowUV, distToLight).r;
     
+    return float4(shadowAmount, distToLight, 0, 1);
     
     float2 adjustedUv = input.uv * uvScale + uvOffset;
     
@@ -82,7 +78,15 @@ float4 main(VertexToPixel input) : SV_TARGET
     for (int i = 0; i < lightCount; ++i) {
         switch (lights[i].Type) {
         case LIGHT_TYPE_DIRECTIONAL:
-                c += DirectionalLight(lights[i], input.normal, (float3) sampleColor, V, specularColor, roughness, metalness);
+                if (i == 0)
+                {
+                    c += DirectionalLight(lights[i], input.normal, (float3) sampleColor, V, specularColor, roughness, metalness) * shadowAmount;
+                }
+                else
+                {
+                    c += DirectionalLight(lights[i], input.normal, (float3) sampleColor, V, specularColor, roughness, metalness);
+                }
+
             break;
         case LIGHT_TYPE_POINT:
                 c += PointLight(lights[i], input.normal, (float3) sampleColor, V, input.worldPosition, specularColor, roughness, metalness);

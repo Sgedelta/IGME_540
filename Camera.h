@@ -29,7 +29,7 @@ private:
 	float FoV = 1.5707f; //in radians
 	float nearClip = .01f;
 	float farClip = 500;
-	float moveSpeed = 1;
+	float moveSpeed = 3;
 	float mouseLookSpeed = .01f; 
 	bool isPerspective = true;
 

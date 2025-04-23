@@ -62,7 +62,7 @@ private:
 	std::vector<DirectX::XMFLOAT4X4> lightViewMatrixList;
 	std::vector<DirectX::XMFLOAT4X4> lightProjectionMatrixList;
 	int shadowMapResolution = 1024; //Ideally a power of 2
-	float lightProjectionSize = 25.0f;
+	float lightProjectionSize = 30.0f;
 
 	//ImGui data
 	float ImGui_bgColor[4];
