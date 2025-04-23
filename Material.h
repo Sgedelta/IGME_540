@@ -37,6 +37,7 @@ public:
 	void AddSampler(std::string samplerName, Microsoft::WRL::ComPtr<ID3D11SamplerState> sampler);
 
 	void PrepareMaterial(Camera* cameraPtr);
+	void BindMaterialShaders();
 
 
 private:

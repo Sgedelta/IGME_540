@@ -100,8 +100,7 @@ void Material::AddSampler(std::string samplerName, Microsoft::WRL::ComPtr<ID3D11
 void Material::PrepareMaterial(Camera* cameraPtr)
 {
 	//bind
-	simpleVertexShader->SetShader();
-	simplePixelShader->SetShader();
+	BindMaterialShaders();
 
 	//set texture stuff
 	for (auto& t : textureSRVs) { simplePixelShader->SetShaderResourceView(t.first.c_str(), t.second); }
@@ -112,4 +111,10 @@ void Material::PrepareMaterial(Camera* cameraPtr)
 	simplePixelShader->SetFloat2("uvOffset", uvOffset);
 	simplePixelShader->SetFloat3("cameraPos", cameraPtr->GetTransform()->GetPosition());
 	simplePixelShader->SetFloat("roughness", roughness);
+}
+
+void Material::BindMaterialShaders()
+{
+	simpleVertexShader->SetShader();
+	simplePixelShader->SetShader();
 }

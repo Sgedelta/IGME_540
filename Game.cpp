@@ -543,6 +543,8 @@ void Game::Draw(float deltaTime, float totalTime)
 	//Draw entities
 	for (int i = 0; i < entityPtrs.size(); ++i) {
 		if (cameraIndex < cameraPtrs.size()) {
+			//bind our shaders:
+			entityPtrs[i].get()->GetMaterial()->BindMaterialShaders();
 			entityPtrs[i].get()->GetMaterial()->AddTextureSRV("ShadowMap", shadowSRV.Get());
 			entityPtrs[i].get()->GetMaterial()->GetVertexShader()->SetMatrix4x4("lightView", lightViewMatrixList[0]);
 			entityPtrs[i].get()->GetMaterial()->GetVertexShader()->SetMatrix4x4("lightProjection", lightProjectionMatrixList[0]);
