@@ -53,6 +53,11 @@ void Entity::Draw( float tint[4], Camera* cameraPtr)
 	sharedMesh.get()->Draw();
 }
 
+void Entity::DrawForLight()
+{
+	sharedMesh.get()->Draw();
+}
+
 void Entity::SendGPUData( float tint[4], Camera* cameraPtr)
 {
 	//bind our shaders:

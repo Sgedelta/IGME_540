@@ -26,6 +26,7 @@ public:
 	void SetMaterial(std::shared_ptr<Material> matPtr);
 
 	void Draw( float tint[4], Camera* cameraPtr);
+	void DrawForLight();
 
 private:
 

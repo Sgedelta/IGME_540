@@ -5,6 +5,7 @@ Texture2D Albedo : register(t0); // "t" registers for textures
 Texture2D NormalTexture : register(t1); //the normal map for our texture
 Texture2D RoughnessMap : register(t2);
 Texture2D MetalnessMap : register(t3);
+Texture2D ShadowMap : register(t4);
 
 SamplerState BasicSampler : register(s0); // "s" registers for samplers
 
@@ -33,6 +34,20 @@ cbuffer ExternalData : register(b0)
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
+    input.shadowMapPos /= input.shadowMapPos.w;
+    //convert to UVs for sample
+    float2 shadowUV = input.shadowMapPos.xy * 0.5f + 0.5f;
+    shadowUV.y = 1 - shadowUV.y; //flip y
+    //distance to light
+    float distToLight = input.shadowMapPos.z;
+    float distShadowMap = ShadowMap.Sample(BasicSampler, shadowUV).r;
+    //testing:
+
+    if (distShadowMap < distToLight)
+    {
+        return float4(0, 0, 0, 1.0f);
+    }
+    
     
     float2 adjustedUv = input.uv * uvScale + uvOffset;
     

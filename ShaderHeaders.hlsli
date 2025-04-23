@@ -35,6 +35,7 @@ struct VertexToPixel
     float3 normal : NORMAL;
     float3 worldPosition : POSITION;
     float3 tangent : TANGENT;
+    float4 shadowMapPos : SHADOW_POSITION;
 };
 
 //vertex to pixel for sky shaders SPECIFICALLY
@@ -43,6 +44,26 @@ struct VertexToPixelSky
     float4 position : SV_POSITION;
     float3 sampleDir : DIRECTION;
 };
+
+
+// Struct representing a single vertex worth of data
+// - This should match the vertex definition in our C++ code
+// - By "match", I mean the size, order and number of members
+// - The name of the struct itself is unimportant, but should be descriptive
+// - Each variable must have a semantic, which defines its usage
+struct VertexShaderInput
+{
+	// Data type
+	//  |
+	//  |   Name          Semantic
+	//  |    |                |
+	//  v    v                v
+    float3 localPosition : POSITION; // XYZ position
+    float2 uv : TEXTCOORD;
+    float3 normal : NORMAL;
+    float3 tangent : TANGENT;
+};
+
 
 struct Light
 {
