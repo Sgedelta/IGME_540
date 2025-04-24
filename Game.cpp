@@ -55,7 +55,7 @@ void Game::Initialize()
 	lights.push_back({});
 	lights[lights.size()-1].Type = LIGHT_TYPE_DIRECTIONAL;
 	lights[lights.size()-1].Direction = XMFLOAT3(0.5f, 1, 0.1f);
-	lights[lights.size()-1].Color = XMFLOAT3(0, 1, 0.3f);
+	lights[lights.size()-1].Color = XMFLOAT3(1, 1, 0.3f);
 	lights[lights.size()-1].Intensity = 150;
 
 	lights.push_back({});
