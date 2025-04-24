@@ -41,7 +41,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     shadowUV.y = 1 - shadowUV.y; //flip y
     //distance to light
     float distToLight = input.shadowMapPos.z;
-    float shadowAmount = ShadowMap.SampleCmpLevelZero(ShadowSampler, shadowUV, distToLight).r;
+    float shadowAmount = ShadowMap.SampleCmpLevelZero(ShadowSampler, shadowUV, distToLight/*-.015f Subtracting this "raises" the floor that counts as "1"*/).r;
     
     return float4(shadowAmount, distToLight, 0, 1);
     
