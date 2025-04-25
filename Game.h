@@ -61,8 +61,8 @@ private:
 	std::shared_ptr<SimpleVertexShader> shadowVS;
 	std::vector<DirectX::XMFLOAT4X4> lightViewMatrixList;
 	std::vector<DirectX::XMFLOAT4X4> lightProjectionMatrixList;
-	int shadowMapResolution = 1024; //Ideally a power of 2
-	float lightProjectionSize = 30.0f;
+	int shadowMapResolution = 2048; //Ideally a power of 2
+	float lightProjectionSize = 50.0f;
 
 	//ImGui data
 	float ImGui_bgColor[4];

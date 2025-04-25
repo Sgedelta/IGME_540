@@ -55,8 +55,8 @@ void Game::Initialize()
 	lights.push_back({});
 	lights[lights.size()-1].Type = LIGHT_TYPE_DIRECTIONAL;
 	lights[lights.size()-1].Direction = XMFLOAT3(0.5f, 1, 0.1f);
-	lights[lights.size()-1].Color = XMFLOAT3(1, 1, 0.3f);
-	lights[lights.size()-1].Intensity = 150;
+	lights[lights.size()-1].Color = XMFLOAT3(0, 1, 0.3f);
+	lights[lights.size()-1].Intensity = 20;
 
 	lights.push_back({});
 	lights[lights.size()-1].Type = LIGHT_TYPE_DIRECTIONAL;
@@ -511,6 +511,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	Graphics::Context->OMSetRenderTargets(1, &nullRTV, shadowDSV.Get());
 	Graphics::Context->PSSetShader(0, 0, 0); //deactivates pixel shader
 
+	//fix viewport to render the shadow map size
 	D3D11_VIEWPORT viewport = {};
 	viewport.Width = (float)shadowMapResolution;
 	viewport.Height = (float)shadowMapResolution;
@@ -834,7 +835,7 @@ void Game::CreateShadowmapResources()
 		case LIGHT_TYPE_DIRECTIONAL:
 			XMFLOAT4X4 lightView;
 			XMStoreFloat4x4(&lightView, XMMatrixLookAtLH(
-				XMLoadFloat3(&lights[i].Direction) * -30.0f,
+				XMLoadFloat3(&lights[i].Direction) * 30.0f,
 				XMLoadFloat3(&lights[i].Direction),
 				XMVectorSet(0, 1, 0, 0)
 			));

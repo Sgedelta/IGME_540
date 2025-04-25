@@ -39,11 +39,14 @@ float4 main(VertexToPixel input) : SV_TARGET
     //convert to UVs for sample
     float2 shadowUV = input.shadowMapPos.xy * 0.5f + 0.5f;
     shadowUV.y = 1 - shadowUV.y; //flip y
-    //distance to light
+    //distance to light - depth buffer grabbing
     float distToLight = input.shadowMapPos.z;
-    float shadowAmount = ShadowMap.SampleCmpLevelZero(ShadowSampler, shadowUV, distToLight/*-.015f Subtracting this "raises" the floor that counts as "1"*/).r;
+    float distShadowMap = ShadowMap.Sample(BasicSampler, shadowUV).r;
+    float shadowAmount = ShadowMap.SampleCmpLevelZero(ShadowSampler, shadowUV, 
+       distToLight/*-.015f Subtracting this "raises" the floor that counts as "1"*/).r;
     
-    return float4(shadowAmount, distToLight, 0, 1);
+    //return float4(shadowAmount, distToLight, distShadowMap, 1);
+    //return float4(distToLight, distShadowMap, 0, 1);
     
     float2 adjustedUv = input.uv * uvScale + uvOffset;
     
@@ -80,7 +83,7 @@ float4 main(VertexToPixel input) : SV_TARGET
         case LIGHT_TYPE_DIRECTIONAL:
                 if (i == 0)
                 {
-                    c += DirectionalLight(lights[i], input.normal, (float3) sampleColor, V, specularColor, roughness, metalness) * shadowAmount;
+                    c += DirectionalLight(lights[i], input.normal, (float3) sampleColor, V, specularColor, roughness, metalness) *shadowAmount;// step(distToLight, distShadowMap);
                 }
                 else
                 {
@@ -98,7 +101,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 
     }
     
-    float3 totalColor = c + (float3) sampleColor;
+    float3 totalColor = c;
 
     return float4(pow(totalColor, 1.0f / 2.2f), 1);
 
