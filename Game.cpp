@@ -143,6 +143,11 @@ void Game::Initialize()
 	ImGui_colorTint[1] = 1.0f;
 	ImGui_colorTint[2] = 1.0f;
 	ImGui_colorTint[3] = 1.0f;
+
+	chromaticOffsets[0] = 0;
+	chromaticOffsets[1] = 0;
+	chromaticOffsets[2] = 0;
+
 }
 
 
@@ -308,6 +313,17 @@ void Game::CreateShaderToEntity()
 
 	Graphics::Device.Get()->CreateSamplerState(&samplerDesc, samplerState.GetAddressOf());
 
+	//make post process samplers
+	D3D11_SAMPLER_DESC ppSamplerDesc = {};
+	ppSamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	ppSamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	ppSamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	ppSamplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	ppSamplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	Graphics::Device->CreateSamplerState(&ppSamplerDesc, ppSampler.GetAddressOf());
+
+	//make post process render targets
+	RecreatePostprocessResources();
 
 	//load shaders:
 	std::shared_ptr<SimpleVertexShader> vs = std::make_shared<SimpleVertexShader>(
@@ -324,6 +340,16 @@ void Game::CreateShaderToEntity()
 		Graphics::Device, Graphics::Context, FixPath(L"TwoTextureShader.cso").c_str());
 	shadowVS = std::make_shared<SimpleVertexShader>(
 		Graphics::Device, Graphics::Context, FixPath(L"ShadowVertexShader.cso").c_str());
+
+	//pp shaders:
+	ppVS = std::make_shared<SimpleVertexShader>(Graphics::Device, Graphics::Context, FixPath(L"FullTriVS.cso").c_str());
+	ppPixelShaders.push_back(std::make_shared<SimplePixelShader>(Graphics::Device, Graphics::Context, 
+		FixPath(L"GaussianBlurXPS.cso").c_str()));
+	ppPixelShaders.push_back(std::make_shared<SimplePixelShader>(Graphics::Device, Graphics::Context,
+		FixPath(L"GaussianBlurYPS.cso").c_str()));
+	ppPixelShaders.push_back(std::make_shared<SimplePixelShader>(Graphics::Device, Graphics::Context,
+		FixPath(L"ChromaticAbberationPS.cso").c_str()));
+
 
 	//make materials:
 	materials.push_back(std::make_shared<Material>(XMFLOAT4(1, 1, 1, 1), vs, ps, 1, 0.0f));
@@ -431,6 +457,8 @@ void Game::OnResize()
 	for (int i = 0; i < cameraPtrs.size(); ++i) {
 		cameraPtrs[i].get()->UpdateProjectionMatrix(Window::AspectRatio());
 	}
+
+	RecreatePostprocessResources();
 	
 }
 
@@ -475,6 +503,11 @@ void Game::Draw(float deltaTime, float totalTime)
 		// Clear the back buffer (erase what's on screen) and depth buffer
 		Graphics::Context->ClearRenderTargetView(Graphics::BackBufferRTV.Get(),	ImGui_bgColor);
 		Graphics::Context->ClearDepthStencilView(Graphics::DepthBufferDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+		for (int i = 0; i < numPostProcesses; ++i) {
+			Graphics::Context->ClearRenderTargetView(ppRenderTargetViews[i].Get(), ImGui_bgColor);
+		}
+
 	}
 
 	// DRAW geometry
@@ -536,11 +569,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	viewport.Width = (float)((int)Window::Width());
 	viewport.Height = (float)((int)Window::Height());
 	Graphics::Context->RSSetViewports(1, &viewport);
-	Graphics::Context->OMSetRenderTargets(
-		1,
-		Graphics::BackBufferRTV.GetAddressOf(),
-		Graphics::DepthBufferDSV.Get()
-	);
+	Graphics::Context->OMSetRenderTargets(1, ppRenderTargetViews[0].GetAddressOf(), Graphics::DepthBufferDSV.Get());
 	Graphics::Context->RSSetState(0);
 
 	//Draw entities
@@ -562,6 +591,50 @@ void Game::Draw(float deltaTime, float totalTime)
 
 	//Draw Skybox
 	sky->Draw(cameraPtrs[cameraIndex].get());
+
+
+	//DRAW POST PROCESSES:
+
+	ppVS->SetShader();
+
+
+	for (int i = 0; i < ppPixelShaders.size(); ++i) {
+		if ( i == ppPixelShaders.size() - 1) {
+			Graphics::Context->OMSetRenderTargets(1, Graphics::BackBufferRTV.GetAddressOf(), 0);
+		}
+		else {
+			//we use i + 1 because the original scene is rendered to 0 and the final post process is rendered to the back buffer
+			Graphics::Context->OMSetRenderTargets(1, ppRenderTargetViews[i + 1].GetAddressOf(), 0);
+		}
+
+		ppPixelShaders[i]->SetShader();
+		ppPixelShaders[i]->SetShaderResourceView("Pixels", ppShaderResourceViews[i].Get());
+		ppPixelShaders[i]->SetSamplerState("ClampSampler", ppSampler.Get());
+
+		//send other cbuffer data here! 
+		switch (i) {
+
+		case 0: //X Gaussian Blur
+		case 1: //Y Gaussian Blur
+			ppPixelShaders[i]->SetInt("blurAmount", blurRadius);
+			ppPixelShaders[i]->SetFloat("pixelSize", (i == 0 ? 1.0f / Window::Width() : 1.0f / Window::Height()));
+			break;
+
+		case 2: //chromatic abberation
+			ppPixelShaders[i]->SetFloat2("mousePos", XMFLOAT2((float)Input::GetMouseX() / Window::Width(), (float)Input::GetMouseY() / Window::Height()));
+			ppPixelShaders[i]->SetFloat3("offsets", XMFLOAT3(chromaticOffsets[0], chromaticOffsets[1], chromaticOffsets[2]));
+			ppPixelShaders[i]->SetInt("mode", chromaticMode);
+			break;
+
+		}
+
+		ppPixelShaders[i]->CopyAllBufferData();
+
+		Graphics::Context->Draw(3, 0);
+		
+	}
+
+	
 
 	//Last thing to draw: ImGui!
 	ImGui::Render();
@@ -765,10 +838,26 @@ void Game::BuildUI() {
 			float color[3]{ lights[i].Color.x, lights[i].Color.y, lights[i].Color.z };
 			ImGui::DragFloat3(std::format("Color of Light {}", i).c_str(), color, 0.01f, 0.0f, 1.0f);
 			lights[i].Color = XMFLOAT3(color[0], color[1], color[2]);
-
 		}
 	}
 	ImGui::End();
+
+	ImGui::Begin("Post Processing");
+
+	ImGui::SeparatorText("Output of Camera before Post Processing:");
+	ImGui::Image((ImTextureID)ppShaderResourceViews[0].Get(), ImVec2((int)Window::Width() / 5, (int)Window::Height() / 5));
+
+	ImGui::DragInt("Blur Radius", &blurRadius, 0, Window::Width());
+	ImGui::DragInt("Chromatic Abberation Mode", &chromaticMode, 0, 2);
+	float offset[3]{ chromaticOffsets[0], chromaticOffsets[1],chromaticOffsets[2]};
+	ImGui::DragFloat3("Chromatic Abberation Offsets", offset, 0.001f, -1.0f, 1.0f);
+	chromaticOffsets[0] = offset[0];
+	chromaticOffsets[1] = offset[1];
+	chromaticOffsets[2] = offset[2];
+
+
+	ImGui::End();
+
 
 }
 
@@ -830,6 +919,8 @@ void Game::CreateShadowmapResources()
 	Graphics::Device->CreateSamplerState(&shadowSampDesc, &shadowSampler);
 
 
+
+
 	for (int i = 0; i < lights.size(); ++i) {
 		switch (lights[i].Type) {
 		case LIGHT_TYPE_DIRECTIONAL:
@@ -854,6 +945,67 @@ void Game::CreateShadowmapResources()
 		default: //do nothing
 			break;
 		}
+	}
+
+}
+
+void Game::RecreatePostprocessResources()
+{
+	//check for startup call to make sure graphics device exists
+	if (Graphics::Device == nullptr) {
+		return;
+	}
+
+	for (int i = 0; i < ppRenderTargetViews.size(); ++i) {
+		ppRenderTargetViews[i].Reset();
+	}
+
+	for (int i = 0; i < ppShaderResourceViews.size(); ++i) {
+		ppShaderResourceViews[i].Reset();
+	}
+
+	ppRenderTargetViews.clear();
+	ppShaderResourceViews.clear();
+
+	for (int i = 0; i < numPostProcesses; ++i) {
+
+		D3D11_TEXTURE2D_DESC textureDesc = {};
+		textureDesc.Width = Window::Width();
+		textureDesc.Height = Window::Height();
+		textureDesc.ArraySize = 1;
+		textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+		textureDesc.CPUAccessFlags = 0;
+		textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		textureDesc.MipLevels = 1;
+		textureDesc.MiscFlags = 0;
+		textureDesc.SampleDesc.Count = 1;
+		textureDesc.SampleDesc.Quality = 0;
+		textureDesc.Usage = D3D11_USAGE_DEFAULT;
+
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> ppTexture;
+		Graphics::Device->CreateTexture2D(&textureDesc, 0, ppTexture.GetAddressOf());
+
+		//create render target
+		D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+		rtvDesc.Format = textureDesc.Format;
+		rtvDesc.Texture2D.MipSlice = 0;
+		rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+		Microsoft::WRL::ComPtr<ID3D11RenderTargetView> ppRTV;
+		Graphics::Device->CreateRenderTargetView(
+			ppTexture.Get(),
+			&rtvDesc,
+			ppRTV.ReleaseAndGetAddressOf()
+		);
+		ppRenderTargetViews.push_back(ppRTV);
+
+		//create srv
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> ppSRV;
+		Graphics::Device->CreateShaderResourceView(
+			ppTexture.Get(),
+			0,
+			ppSRV.ReleaseAndGetAddressOf()
+		);
+		ppShaderResourceViews.push_back(ppSRV);
 	}
 
 }

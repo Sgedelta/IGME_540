@@ -41,6 +41,7 @@ private:
 	void UpdateImGui(float deltaTime);
 	void BuildUI();
 	void CreateShadowmapResources();
+	void RecreatePostprocessResources();
 
 	// Note the usage of ComPtr below
 	//  - This is a smart pointer for objects that abide by the
@@ -64,6 +65,16 @@ private:
 	int shadowMapResolution = 2048; //Ideally a power of 2
 	float lightProjectionSize = 50.0f;
 
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> ppSampler;
+	std::shared_ptr<SimpleVertexShader> ppVS;
+
+	int numPostProcesses = 3;
+
+	std::vector<std::shared_ptr<SimplePixelShader>> ppPixelShaders;
+	std::vector<Microsoft::WRL::ComPtr<ID3D11RenderTargetView>> ppRenderTargetViews;
+	std::vector<Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> ppShaderResourceViews;
+
+
 	//ImGui data
 	float ImGui_bgColor[4];
 	float ImGui_colorTint[4];
@@ -72,5 +83,8 @@ private:
 	std::vector<float> entityData;
 	std::vector<Light> lights;
 	DirectX::XMFLOAT3 ambientColor;
+	int blurRadius = 10;
+	float chromaticOffsets[3];
+	int chromaticMode = 0;
 };
 
